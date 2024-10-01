@@ -1,5 +1,7 @@
 import tkinter
 from tkinter import *
+from tkinter import filedialog
+
 from canvas import CustomCanvas
 from file_manager import FileManager
 
@@ -19,17 +21,17 @@ class MainWindow(tkinter.Tk):
         self.menu = Menu(self)
         self.file_menu = Menu(self)
         self.help_menu = Menu(self)
-        self.setup_menus()
 
-    def setup_menus(self):
+    def setup_menus(self, canvas):
         # Set up menus
         self.config(menu=self.menu)
         self.menu.add_cascade(label='File', menu=self.file_menu)
         self.menu.add_cascade(label='Help', menu=self.help_menu)
+        self.menu.add_cascade(label='Undo', command=canvas.undo)
 
         # Set up file_menu
         self.file_menu.add_command(label='New', command=print_sentence)
-        self.file_menu.add_command(label='Open', command=self.open_load_window)
+        self.file_menu.add_command(label='Open', command=lambda:self.open_load_window(canvas))
         self.file_menu.add_separator()
         self.file_menu.add_command(label='Save', command=print_sentence)
         self.file_menu.add_command(label='Save As', command=self.open_save_window)
@@ -42,10 +44,17 @@ class MainWindow(tkinter.Tk):
         test_label = Label(self, text="Hello World")
         test_label.pack()
 
-    def open_load_window(self):
+    def open_load_window(self, canvas):
         # Check to keep only one extra window open at a time
         if not SecondaryWindow.open:
-            self.load_window = SecondaryWindow((int(self.x/2), int(self.y/2)), "Load Image", print_sentence)
+            file_path = filedialog.askopenfilename(
+                title="Select an Image",
+                filetypes=[("Image Files", "*.jpg;*.jpeg;*.png;*.bmp")],
+            )
+            canvas.file_manager.import_image(file_path)
+            image = canvas.file_manager.current_image
+            canvas.display_image_on_canvas()
+
 
     def open_save_window(self):
         # Check to keep only one extra window open at a time
@@ -82,14 +91,13 @@ class Pigment:
 
         # Create main window object
         self.root = MainWindow(XY, 'Pigment-PaintLite')
-
+        self.canvas = CustomCanvas(self.root)
+        self.root.setup_menus(self.canvas)
 
 
 if __name__ == '__main__':
     screen = (700,1000)
-
     program = Pigment(screen)
-    canvas = CustomCanvas(program.root)
     program.root.run()
 
 
