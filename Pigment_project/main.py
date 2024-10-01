@@ -1,5 +1,7 @@
 import tkinter
 from tkinter import *
+from canvas import CustomCanvas
+from file_manager import FileManager
 
 def print_sentence():
     print('hello world')
@@ -83,9 +85,11 @@ class Pigment:
 
 
 
+if __name__ == '__main__':
+    screen = (700,1000)
 
-screen = (700,1000)
+    program = Pigment(screen)
+    canvas = CustomCanvas(program.root)
+    program.root.run()
 
-program = Pigment(screen)
-program.root.run()
 
