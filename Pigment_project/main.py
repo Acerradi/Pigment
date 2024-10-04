@@ -22,7 +22,7 @@ class MainWindow(tkinter.Tk):
         self.file_menu = Menu(self)
         self.help_menu = Menu(self)
 
-    def setup_menus(self, canvas):
+    def setup_menus(self, canvas, program):
         # Set up menus
         self.config(menu=self.menu)
         self.menu.add_cascade(label='File', menu=self.file_menu)
@@ -30,11 +30,11 @@ class MainWindow(tkinter.Tk):
         self.menu.add_cascade(label='Undo', command=canvas.undo)
 
         # Set up file_menu
-        self.file_menu.add_command(label='New', command=print_sentence)
+        self.file_menu.add_command(label='New', command=lambda:self.new_main_window(program))
         self.file_menu.add_command(label='Open', command=lambda:self.open_load_window(canvas))
         self.file_menu.add_separator()
-        self.file_menu.add_command(label='Save', command=print_sentence)
-        self.file_menu.add_command(label='Save As', command=self.open_save_window)
+        self.file_menu.add_command(label='Save', command=lambda:self.save(canvas))
+        self.file_menu.add_command(label='Save As', command=lambda:self.open_save_window(canvas))
         self.file_menu.add_separator()
         self.file_menu.add_command(label='Exit', command=self.quit)
 
@@ -43,7 +43,9 @@ class MainWindow(tkinter.Tk):
 
         test_label = Label(self, text="Hello World")
         test_label.pack()
-
+    def new_main_window(self,program):
+        program.root.destroy()
+        program.create_main_window()
     def open_load_window(self, canvas):
         # Check to keep only one extra window open at a time
         if not SecondaryWindow.open:
@@ -52,14 +54,21 @@ class MainWindow(tkinter.Tk):
                 filetypes=[("Image Files", "*.jpg;*.jpeg;*.png;*.bmp")],
             )
             canvas.file_manager.import_image(file_path)
-            image = canvas.file_manager.current_image
             canvas.display_image_on_canvas()
-
-
-    def open_save_window(self):
+    def save(self, canvas):
+        if canvas.file_manager.current_path is None:
+            self.open_save_window(canvas)
+        elif canvas.file_manager.current_path is not None:
+            canvas.file_manager.save()
+    def open_save_window(self,canvas):
         # Check to keep only one extra window open at a time
         if not SecondaryWindow.open:
-            self.save_window = SecondaryWindow((int(self.x/2), int(self.y/2)), "Save Image", print_sentence)
+            file = filedialog.asksaveasfile(defaultextension="png",
+                title="Save as",
+                filetypes=[("Image Files", "*.jpg;*.jpeg;*.png;*.bmp")]
+            )
+            if file:
+                canvas.file_manager.current_image.save(file.name)
 
     def run(self):
         # Execute tkinter
@@ -89,15 +98,18 @@ class Pigment:
         # Set dimensions of the main window
         self.x, self.y = XY
 
+
+    def create_main_window(self):
         # Create main window object
-        self.root = MainWindow(XY, 'Pigment-PaintLite')
+        self.root = MainWindow((self.x,self.y), 'Pigment-PaintLite')
         self.canvas = CustomCanvas(self.root)
-        self.root.setup_menus(self.canvas)
-
-
-if __name__ == '__main__':
-    screen = (700,1000)
+        self.root.setup_menus(self.canvas, self)
+        self.root.run()
+def run1():
+    screen = (700, 1000)
     program = Pigment(screen)
-    program.root.run()
+    program.create_main_window()
+if __name__ == '__main__':
+    run1()
 
 

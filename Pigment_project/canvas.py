@@ -36,12 +36,13 @@ class CustomCanvas:
             x1, y1 = self.start_x, self.start_y
             x2, y2 = event.x, event.y
 
-            # Draw on the canvas if no image is loaded
-            if self.file_manager.current_image is None:
-                self.canvas.create_line((x1, y1), (x2, y2), fill='black', width=5)
-            else:
-                # Add line points to current stroke
-                self.current_stroke.append(((x1, y1), (x2, y2)))
+            # Draw the line directly on the image
+            draw = ImageDraw.Draw(self.file_manager.current_image)
+            draw.line([x1, y1, x2, y2], fill="black", width=5)
+            # Add line points to current stroke
+            self.current_stroke.append(((x1, y1), (x2, y2)))
+            # Display the updated image on the canvas
+            self.display_image_on_canvas()
 
             # Update start point for next motion
             self.start_x, self.start_y = x2, y2
