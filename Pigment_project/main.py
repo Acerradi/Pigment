@@ -20,14 +20,17 @@ class MainWindow(tkinter.Tk):
         # Create all menu objects
         self.menu = Menu(self)
         self.file_menu = Menu(self)
+        self.image_menu = Menu(self)
         self.help_menu = Menu(self)
 
     def setup_menus(self, canvas, program):
         # Set up menus
         self.config(menu=self.menu)
         self.menu.add_cascade(label='File', menu=self.file_menu)
-        self.menu.add_cascade(label='Help', menu=self.help_menu)
+        self.menu.add_cascade(label='Image', menu=self.image_menu)
         self.menu.add_cascade(label='Undo', command=canvas.undo)
+        self.menu.add_cascade(label='Help', menu=self.help_menu)
+
 
         # Set up file_menu
         self.file_menu.add_command(label='New', command=lambda:self.new_main_window(program))
@@ -37,6 +40,13 @@ class MainWindow(tkinter.Tk):
         self.file_menu.add_command(label='Save As', command=lambda:self.open_save_window(canvas))
         self.file_menu.add_separator()
         self.file_menu.add_command(label='Exit', command=self.quit)
+        #Set up image menu
+        self.image_menu.add_command(label="Crop",command=lambda:self.open_crop_window(canvas))
+        self.image_menu.add_command(label="Resize")
+        self.image_menu.add_command(label="Rotate left",command=lambda:self.image_edit(1,canvas))
+        self.image_menu.add_command(label="Rotate right",command=lambda:self.image_edit(2,canvas))
+        self.image_menu.add_command(label="Flip vertically",command=lambda:self.image_edit(3,canvas))
+        self.image_menu.add_command(label="Flip horizontally",command=lambda:self.image_edit(4,canvas))
 
         # Set up help_menu
         self.help_menu.add_command(label='Help', command=print_sentence)
@@ -69,12 +79,51 @@ class MainWindow(tkinter.Tk):
             )
             if file:
                 canvas.file_manager.current_image.save(file.name)
+    def open_crop_window(self, canvas:CustomCanvas):
+        crop_window = Toplevel(self)
+        label_1_text = StringVar()
+        label_1_text.set("Pixels cropped from left")
+        label_1 = Label(crop_window, textvariable=label_1_text)
+        label_1.pack()
+        entry_1_text = StringVar()
+        entry_1 = Entry(crop_window, textvariable=entry_1_text)
+        entry_1.pack()
+        label_2_text = StringVar()
+        label_2_text.set("Pixels cropped from top")
+        label_2 = Label(crop_window, textvariable=label_2_text)
+        label_2.pack()
+        entry_2_text = StringVar()
+        entry_2 = Entry(crop_window, textvariable=entry_2_text)
+        entry_2.pack()
+        label_3_text = StringVar()
+        label_3_text.set("Pixels cropped from right")
+        label_3 = Label(crop_window, textvariable=label_3_text)
+        label_3.pack()
+        entry_3_text = StringVar()
+        entry_3 = Entry(crop_window, textvariable=entry_3_text)
+        entry_3.pack()
+        label_4_text = StringVar()
+        label_4_text.set("Pixels cropped from bottom")
+        label_4 = Label(crop_window, textvariable=label_4_text)
+        label_4.pack()
+        entry_4_text = StringVar()
+        entry_4 = Entry(crop_window, textvariable=entry_4_text)
+        entry_4.pack()
+        confirm_button = Button(crop_window, text="Confirm", command=lambda:canvas.crop((int(entry_1_text.get()),int(entry_2_text.get()),int(entry_3_text.get()),int(entry_4_text.get()))))
+        confirm_button.pack()
+    def image_edit(self,opt:int,canvas:CustomCanvas):
+        if opt == 1:
+            canvas.rotate_left()
+        elif opt == 2:
+            canvas.rotate_right()
+        elif opt == 3:
+            canvas.flip_vertically()
+        elif opt == 4:
+            canvas.flip_horizontally()
 
     def run(self):
         # Execute tkinter
         self.mainloop()
-
-
 # Secondary window class for loading/saving images
 class SecondaryWindow(tkinter.Toplevel):
     # Value to keep track of whether this window is open or not
