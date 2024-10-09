@@ -23,6 +23,19 @@ class MainWindow(tkinter.Tk):
         self.image_menu = Menu(self)
         self.help_menu = Menu(self)
 
+        # Create all window objects
+        self.top_window = None
+        self.left_window = None
+        self.right_window = None
+
+    def setup_windows(self):
+        self.top_window = tkinter.Frame(self, height=150, width=self.x, borderwidth= 5, relief=tkinter.RIDGE)
+        self.left_window = tkinter.Frame(self, height=(self.y-150), width=150, borderwidth= 5, relief=tkinter.RIDGE)
+        self.right_window = tkinter.Frame(self, height=(self.y-150), width=150, borderwidth= 5, relief=tkinter.RIDGE)
+        self.top_window.pack(side=tkinter.TOP, fill='both', expand=True)
+        self.left_window.pack(side=tkinter.LEFT, fill='both', expand=True)
+        self.right_window.pack(side=tkinter.RIGHT, fill='both', expand=True)
+
     def setup_menus(self, canvas, program):
         # Set up menus
         self.config(menu=self.menu)
@@ -51,11 +64,10 @@ class MainWindow(tkinter.Tk):
         # Set up help_menu
         self.help_menu.add_command(label='Help', command=print_sentence)
 
-        test_label = Label(self, text="Hello World")
-        test_label.pack()
     def new_main_window(self,program):
         program.root.destroy()
         program.create_main_window()
+
     def open_load_window(self, canvas):
         # Check to keep only one extra window open at a time
         if not SecondaryWindow.open:
@@ -65,11 +77,13 @@ class MainWindow(tkinter.Tk):
             )
             canvas.file_manager.import_image(file_path)
             canvas.display_image_on_canvas()
+
     def save(self, canvas):
         if canvas.file_manager.current_path is None:
             self.open_save_window(canvas)
         elif canvas.file_manager.current_path is not None:
             canvas.file_manager.save()
+
     def open_save_window(self,canvas):
         # Check to keep only one extra window open at a time
         if not SecondaryWindow.open:
@@ -79,6 +93,7 @@ class MainWindow(tkinter.Tk):
             )
             if file:
                 canvas.file_manager.current_image.save(file.name)
+
     def open_crop_window(self, canvas:CustomCanvas):
         crop_window = Toplevel(self)
         label_1_text = StringVar()
@@ -111,6 +126,7 @@ class MainWindow(tkinter.Tk):
         entry_4.pack()
         confirm_button = Button(crop_window, text="Confirm", command=lambda:canvas.crop((int(entry_1_text.get()),int(entry_2_text.get()),int(entry_3_text.get()),int(entry_4_text.get()))))
         confirm_button.pack()
+
     def image_edit(self,opt:int,canvas:CustomCanvas):
         if opt == 1:
             canvas.rotate_left()
@@ -124,6 +140,7 @@ class MainWindow(tkinter.Tk):
     def run(self):
         # Execute tkinter
         self.mainloop()
+
 # Secondary window class for loading/saving images
 class SecondaryWindow(tkinter.Toplevel):
     # Value to keep track of whether this window is open or not
@@ -145,19 +162,23 @@ class SecondaryWindow(tkinter.Toplevel):
 class Pigment:
     def __init__(self, XY):
         # Set dimensions of the main window
+        self.canvas = None
+        self.root = None
         self.x, self.y = XY
-
 
     def create_main_window(self):
         # Create main window object
         self.root = MainWindow((self.x,self.y), 'Pigment-PaintLite')
+        self.root.setup_windows()
         self.canvas = CustomCanvas(self.root)
         self.root.setup_menus(self.canvas, self)
         self.root.run()
+
 def run1():
     screen = (700, 1000)
     program = Pigment(screen)
     program.create_main_window()
+
 if __name__ == '__main__':
     run1()
 
