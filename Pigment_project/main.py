@@ -24,17 +24,28 @@ class MainWindow(tkinter.Tk):
         self.help_menu = Menu(self)
 
         # Create all window objects
-        self.top_window = None
-        self.left_window = None
-        self.right_window = None
+        self.top_frame = None
+        self.left_frame = None
+        self.right_frame = None
+        self.canvas_frame = None
 
     def setup_windows(self):
-        self.top_window = tkinter.Frame(self, height=150, width=self.x, borderwidth= 5, relief=tkinter.RIDGE)
-        self.left_window = tkinter.Frame(self, height=(self.y-150), width=150, borderwidth= 5, relief=tkinter.RIDGE)
-        self.right_window = tkinter.Frame(self, height=(self.y-150), width=150, borderwidth= 5, relief=tkinter.RIDGE)
-        self.top_window.pack(side=tkinter.TOP, fill='both', expand=True)
-        self.left_window.pack(side=tkinter.LEFT, fill='both', expand=True)
-        self.right_window.pack(side=tkinter.RIGHT, fill='both', expand=True)
+        # Configure the grid layout of the window
+        self.grid_rowconfigure(1, weight=1)
+        self.grid_columnconfigure(1, weight=1)
+
+        # Initialize the top frame, stretch it out across three columns and make it stretch horizontally when the window expands
+        self.top_frame = tkinter.Frame(self, height=150, borderwidth= 5, relief=tkinter.RIDGE)
+        self.top_frame.grid(row=0, column=0, columnspan=3, sticky=tkinter.EW)
+        # Initialize the left frame in (row 1, column 0), and make it stretch vertically when the window expands
+        self.left_frame = tkinter.Frame(self, width=150, borderwidth= 5, relief=tkinter.RIDGE)
+        self.left_frame.grid(row=1, column=0, sticky=tkinter.NS)
+        # Initialize the right frame in (row 1, column 2), and make it stretch vertically when the window expands
+        self.right_frame = tkinter.Frame(self, width=150, borderwidth= 5, relief=tkinter.RIDGE)
+        self.right_frame.grid(row=1, column=2, sticky=tkinter.NS)
+        # Initialize the canvas frame in (row 1, column 1), and make it expand in all directions when the window expands
+        self.canvas_frame = tkinter.Frame(self, bg='gray')
+        self.canvas_frame.grid(row=1, column=1, sticky=tkinter.NSEW)
 
     def setup_menus(self, canvas, program):
         # Set up menus
@@ -170,7 +181,7 @@ class Pigment:
         # Create main window object
         self.root = MainWindow((self.x,self.y), 'Pigment-PaintLite')
         self.root.setup_windows()
-        self.canvas = CustomCanvas(self.root)
+        self.canvas = CustomCanvas(self.root.canvas_frame)
         self.root.setup_menus(self.canvas, self)
         self.root.run()
 
