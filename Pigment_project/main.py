@@ -47,6 +47,11 @@ class MainWindow(tkinter.Tk):
         self.canvas_frame = tkinter.Frame(self, bg='gray')
         self.canvas_frame.grid(row=1, column=1, sticky=tkinter.NSEW)
 
+    def setup_main_frames(self, canvas):
+        change_color_button = tkinter.Button(self.right_frame, text = "Select color", command=canvas.change_color)
+        change_color_button.grid(row=0, column=0)
+        change_color_button.pack()
+
     def setup_menus(self, canvas, program):
         # Set up menus
         self.config(menu=self.menu)
@@ -183,6 +188,7 @@ class Pigment:
         self.root.setup_windows()
         self.canvas = CustomCanvas(self.root.canvas_frame)
         self.root.setup_menus(self.canvas, self)
+        self.root.setup_main_frames(self.canvas)
         self.root.run()
 
 def run1():

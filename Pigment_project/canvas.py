@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import colorchooser
 from PIL import Image, ImageTk, ImageDraw
 import cv2
 from file_manager import FileManager
@@ -11,9 +12,13 @@ class CustomCanvas:
         self.canvas = tk.Canvas(root, width=500, height=500)
         self.canvas.pack(fill='both', expand=True)
         self.display_image_on_canvas()
+
         # Attributes to track drawing
         self.start_x, self.start_y = None, None
         self.current_stroke = None
+        self.drawing_color = "black"
+        self.drawing_size = 5
+
         # Keep track of the drawing history (for undo)
         self.history = []
         # Bind mouse events
@@ -37,7 +42,7 @@ class CustomCanvas:
 
             # Draw the line directly on the image
             draw = ImageDraw.Draw(self.file_manager.current_image)
-            draw.line([x1, y1, x2, y2], fill="black", width=5)
+            draw.line([x1, y1, x2, y2], fill=self.drawing_color[1], width=self.drawing_size)
             # Add line points to current stroke
             self.current_stroke.append(((x1, y1), (x2, y2)))
             # Display the updated image on the canvas
@@ -53,12 +58,15 @@ class CustomCanvas:
             if self.file_manager.current_image is not None:
                 draw = ImageDraw.Draw(self.file_manager.current_image)
                 for (x1, y1), (x2, y2) in self.current_stroke:
-                    draw.line([x1, y1, x2, y2], fill="black", width=5)
+                    draw.line([x1, y1, x2, y2], fill=self.drawing_color[1], width=self.drawing_size)
                 self.display_image_on_canvas()
 
         # Reset drawing state
         self.start_x, self.start_y = None, None
         self.current_stroke = []
+
+    def change_color(self):
+        self.drawing_color = colorchooser.askcolor(title = "choose color")
 
     def display_image_on_canvas(self):
         canvas = self.canvas
