@@ -23,6 +23,35 @@ class MainWindow(tkinter.Tk):
         self.image_menu = Menu(self)
         self.help_menu = Menu(self)
 
+        # Create all window objects
+        self.top_frame = None
+        self.left_frame = None
+        self.right_frame = None
+        self.canvas_frame = None
+
+    def setup_windows(self):
+        # Configure the grid layout of the window
+        self.grid_rowconfigure(1, weight=1)
+        self.grid_columnconfigure(1, weight=1)
+
+        # Initialize the top frame, stretch it out across three columns and make it stretch horizontally when the window expands
+        self.top_frame = tkinter.Frame(self, height=150, borderwidth= 5, relief=tkinter.RIDGE)
+        self.top_frame.grid(row=0, column=0, columnspan=3, sticky=tkinter.EW)
+        # Initialize the left frame in (row 1, column 0), and make it stretch vertically when the window expands
+        self.left_frame = tkinter.Frame(self, width=150, borderwidth= 5, relief=tkinter.RIDGE)
+        self.left_frame.grid(row=1, column=0, sticky=tkinter.NS)
+        # Initialize the right frame in (row 1, column 2), and make it stretch vertically when the window expands
+        self.right_frame = tkinter.Frame(self, width=150, borderwidth= 5, relief=tkinter.RIDGE)
+        self.right_frame.grid(row=1, column=2, sticky=tkinter.NS)
+        # Initialize the canvas frame in (row 1, column 1), and make it expand in all directions when the window expands
+        self.canvas_frame = tkinter.Frame(self, bg='gray')
+        self.canvas_frame.grid(row=1, column=1, sticky=tkinter.NSEW)
+
+    def setup_main_frames(self, canvas):
+        change_color_button = tkinter.Button(self.right_frame, text = "Select color", command=canvas.change_color)
+        change_color_button.grid(row=0, column=0)
+        change_color_button.pack()
+
     def setup_menus(self, canvas, program):
         # Set up menus
         self.config(menu=self.menu)
@@ -51,11 +80,10 @@ class MainWindow(tkinter.Tk):
         # Set up help_menu
         self.help_menu.add_command(label='Help', command=print_sentence)
 
-        test_label = Label(self, text="Hello World")
-        test_label.pack()
     def new_main_window(self,program):
         program.root.destroy()
         program.create_main_window()
+
     def open_load_window(self, canvas):
         # Check to keep only one extra window open at a time
         if not SecondaryWindow.open:
@@ -65,11 +93,13 @@ class MainWindow(tkinter.Tk):
             )
             canvas.file_manager.import_image(file_path)
             canvas.display_image_on_canvas()
+
     def save(self, canvas):
         if canvas.file_manager.current_path is None:
             self.open_save_window(canvas)
         elif canvas.file_manager.current_path is not None:
             canvas.file_manager.save()
+
     def open_save_window(self,canvas):
         # Check to keep only one extra window open at a time
         if not SecondaryWindow.open:
@@ -79,6 +109,7 @@ class MainWindow(tkinter.Tk):
             )
             if file:
                 canvas.file_manager.current_image.save(file.name)
+
     def open_crop_window(self, canvas:CustomCanvas):
         crop_window = Toplevel(self)
         label_1_text = StringVar()
@@ -111,6 +142,7 @@ class MainWindow(tkinter.Tk):
         entry_4.pack()
         confirm_button = Button(crop_window, text="Confirm", command=lambda:canvas.crop((int(entry_1_text.get()),int(entry_2_text.get()),int(entry_3_text.get()),int(entry_4_text.get()))))
         confirm_button.pack()
+
     def image_edit(self,opt:int,canvas:CustomCanvas):
         if opt == 1:
             canvas.rotate_left()
@@ -124,6 +156,7 @@ class MainWindow(tkinter.Tk):
     def run(self):
         # Execute tkinter
         self.mainloop()
+
 # Secondary window class for loading/saving images
 class SecondaryWindow(tkinter.Toplevel):
     # Value to keep track of whether this window is open or not
@@ -145,19 +178,24 @@ class SecondaryWindow(tkinter.Toplevel):
 class Pigment:
     def __init__(self, XY):
         # Set dimensions of the main window
+        self.canvas = None
+        self.root = None
         self.x, self.y = XY
-
 
     def create_main_window(self):
         # Create main window object
         self.root = MainWindow((self.x,self.y), 'Pigment-PaintLite')
-        self.canvas = CustomCanvas(self.root)
+        self.root.setup_windows()
+        self.canvas = CustomCanvas(self.root.canvas_frame)
         self.root.setup_menus(self.canvas, self)
+        self.root.setup_main_frames(self.canvas)
         self.root.run()
+
 def run1():
     screen = (700, 1000)
     program = Pigment(screen)
     program.create_main_window()
+
 if __name__ == '__main__':
     run1()
 
