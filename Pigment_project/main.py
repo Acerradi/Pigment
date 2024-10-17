@@ -28,6 +28,7 @@ class MainWindow(tkinter.Tk):
         self.left_frame = None
         self.right_frame = None
         self.canvas_frame = None
+        self.setup_windows()
 
     def setup_windows(self):
         # Configure the grid layout of the window
@@ -116,42 +117,42 @@ class MainWindow(tkinter.Tk):
         label_1_text.set("Pixels cropped from left")
         label_1 = Label(crop_window, textvariable=label_1_text)
         label_1.pack()
-        entry_1_text = StringVar()
+        entry_1_text = StringVar(value="0")
         entry_1 = Entry(crop_window, textvariable=entry_1_text)
         entry_1.pack()
+
         label_2_text = StringVar()
         label_2_text.set("Pixels cropped from top")
         label_2 = Label(crop_window, textvariable=label_2_text)
         label_2.pack()
-        entry_2_text = StringVar()
+        entry_2_text = StringVar(value="0")
         entry_2 = Entry(crop_window, textvariable=entry_2_text)
         entry_2.pack()
+
         label_3_text = StringVar()
         label_3_text.set("Pixels cropped from right")
         label_3 = Label(crop_window, textvariable=label_3_text)
         label_3.pack()
-        entry_3_text = StringVar()
+        entry_3_text = StringVar(value="0")
         entry_3 = Entry(crop_window, textvariable=entry_3_text)
         entry_3.pack()
+
         label_4_text = StringVar()
         label_4_text.set("Pixels cropped from bottom")
         label_4 = Label(crop_window, textvariable=label_4_text)
         label_4.pack()
-        entry_4_text = StringVar()
+        entry_4_text = StringVar(value="0")
         entry_4 = Entry(crop_window, textvariable=entry_4_text)
         entry_4.pack()
+
         confirm_button = Button(crop_window, text="Confirm", command=lambda:canvas.crop((int(entry_1_text.get()),int(entry_2_text.get()),int(entry_3_text.get()),int(entry_4_text.get()))))
         confirm_button.pack()
 
     def image_edit(self,opt:int,canvas:CustomCanvas):
-        if opt == 1:
-            canvas.rotate_left()
-        elif opt == 2:
-            canvas.rotate_right()
-        elif opt == 3:
-            canvas.flip_vertically()
-        elif opt == 4:
-            canvas.flip_horizontally()
+        if opt <= 2:
+            canvas.rotate(opt)
+        elif opt <= 4:
+            canvas.flip(opt)
 
     def run(self):
         # Execute tkinter
@@ -185,7 +186,6 @@ class Pigment:
     def create_main_window(self):
         # Create main window object
         self.root = MainWindow((self.x,self.y), 'Pigment-PaintLite')
-        self.root.setup_windows()
         self.canvas = CustomCanvas(self.root.canvas_frame)
         self.root.setup_menus(self.canvas, self)
         self.root.setup_main_frames(self.canvas)
