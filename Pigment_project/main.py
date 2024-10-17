@@ -53,6 +53,14 @@ class MainWindow(tkinter.Tk):
         change_color_button.grid(row=0, column=0)
         change_color_button.pack()
 
+        draw_tool_button = tkinter.Button(self.left_frame, text = "Draw", command=print_sentence)
+        draw_tool_button.grid(row=0, column=0)
+        draw_tool_button.pack()
+
+        erase_tool_button = tkinter.Button(self.left_frame, text = "Erase", command=print_sentence)
+        erase_tool_button.grid(row=0, column=1)
+        erase_tool_button.pack()
+
     def setup_menus(self, canvas, program):
         # Set up menus
         self.config(menu=self.menu)
@@ -86,12 +94,11 @@ class MainWindow(tkinter.Tk):
         program.create_main_window()
 
     def open_load_window(self, canvas):
-        # Check to keep only one extra window open at a time
-        if not SecondaryWindow.open:
-            file_path = filedialog.askopenfilename(
-                title="Select an Image",
-                filetypes=[("Image Files", "*.jpg;*.jpeg;*.png;*.bmp")],
-            )
+        file_path = filedialog.askopenfilename(
+            title="Select an Image",
+            filetypes=[("Image Files", "*.jpg;*.jpeg;*.png;*.bmp")]
+        )
+        if file_path:
             canvas.file_manager.import_image(file_path)
             canvas.display_image_on_canvas()
 
@@ -102,14 +109,12 @@ class MainWindow(tkinter.Tk):
             canvas.file_manager.save()
 
     def open_save_window(self,canvas):
-        # Check to keep only one extra window open at a time
-        if not SecondaryWindow.open:
-            file = filedialog.asksaveasfile(defaultextension="png",
+        file = filedialog.asksaveasfile(defaultextension="png",
                 title="Save as",
                 filetypes=[("Image Files", "*.jpg;*.jpeg;*.png;*.bmp")]
-            )
-            if file:
-                canvas.file_manager.current_image.save(file.name)
+        )
+        if file:
+            canvas.file_manager.current_image.save(file.name)
 
     def open_crop_window(self, canvas:CustomCanvas):
         crop_window = Toplevel(self)
@@ -157,22 +162,6 @@ class MainWindow(tkinter.Tk):
     def run(self):
         # Execute tkinter
         self.mainloop()
-
-# Secondary window class for loading/saving images
-class SecondaryWindow(tkinter.Toplevel):
-    # Value to keep track of whether this window is open or not
-    open = False
-    def __init__(self, XY ,title, func):
-        super().__init__()
-        self.config(width = XY[0], height = XY[1])
-        self.title(title)
-        self.func = func()
-        self.file_path = ''
-        self.__class__.alive = True
-
-    def function(self):
-        #Either load the image from the chosen self.filepath or save the current image to the current self.filepath
-        pass
 
 
 # Main Class
