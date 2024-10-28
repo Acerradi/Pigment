@@ -140,7 +140,7 @@ class DrawTool(Tool):
 
 
 class EraserTool(Tool):
-    def __init__(self, r_canvas, canvas, color, size):
+    def __init__(self, r_canvas, canvas, size):
         super().__init__(r_canvas, canvas, color="#ffffff")
         self.size = size
         self.current_stroke = None
