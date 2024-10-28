@@ -1,7 +1,7 @@
 import tkinter
 
 import numpy as np
-from PIL import ImageDraw, ImageGrab
+from PIL import ImageDraw, ImageGrab, Image, ImageColor
 
 from Pigment_project import canvas
 
@@ -188,18 +188,56 @@ class EraserTool(Tool):
         self.current_stroke = []
 
 
+from PIL import Image
+
+
 class BucketTool(Tool):
     def __init__(self, root, canvas, color):
         super().__init__(root, canvas, color=color)
 
     def mouse_down(self, event):
-        raise "BucketTool"
+        # Get the starting coordinates
+        x, y = event.x, event.y
+        self.color = ImageColor.getrgb(self.color)
+
+        # Get the image from the canvas (assuming canvas is associated with an image)
+        self.image = self.root.file_manager.current_image
+        target_color = self.image.getpixel((x, y))
+
+        # Perform flood fill if target color is different from fill color
+        if target_color != self.color:
+            self.flood_fill(x, y, target_color, self.color)
+
+        # Update the canvas with the modified image
+        self.root.display_image_on_canvas()
 
     def mouse_middle(self, event):
         raise "BucketTool"
 
     def mouse_up(self, event):
         raise "BucketTool"
+
+    def flood_fill(self, x, y, target_color, fill_color):
+        width, height = self.image.size
+        pixels = self.image.load()  # Direct access to image pixels
+
+        # Stack-based flood fill to avoid recursion depth issues
+        stack = [(x, y)]
+        while stack:
+            x, y = stack.pop()
+
+            # Skip if out of bounds or already filled with fill_color
+            if not (0 <= x < width and 0 <= y < height) or pixels[x, y] != target_color:
+                continue
+
+            # Fill the current pixel
+            pixels[x, y] = fill_color
+
+            # Add neighboring pixels (4-way connectivity)
+            stack.append((x + 1, y))  # Right
+            stack.append((x - 1, y))  # Left
+            stack.append((x, y + 1))  # Down
+            stack.append((x, y - 1))  # Up
 
 
 class ColorPickerTool(Tool):

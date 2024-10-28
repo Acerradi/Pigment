@@ -40,7 +40,8 @@ class CustomCanvas:
             self.tool.bind_events()
         # Bucket tool
         if numb == 2:
-            pass
+            self.tool = BucketTool(self, self.canvas, self.drawing_color)
+            self.tool.bind_events()
         #  Color Picker tool
         if numb == 3:
             self.tool = ColorPickerTool(self, self.canvas, self.file_manager)
