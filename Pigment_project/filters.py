@@ -22,6 +22,7 @@ def cv2_2_pillow(opencv_image):
     return pillow_image
 def gaussian(root:CustomCanvas):
     image = root.file_manager.current_image
+    root.history.append(image.copy())
     blurred_image = image.filter(ImageFilter.GaussianBlur(radius=2))
     root.file_manager.current_image = blurred_image
     root.display_image_on_canvas()
@@ -30,6 +31,7 @@ def gaussian(root:CustomCanvas):
 def sobel(root: CustomCanvas):
     # Get the current image in Pillow format
     pillow_image = root.file_manager.current_image
+    root.history.append(pillow_image.copy())
 
     # Convert Pillow image to OpenCV format
     image = pillow_2_cv2(pillow_image)
@@ -55,6 +57,7 @@ def sobel(root: CustomCanvas):
 def apply_binary_filter(root:CustomCanvas, threshold=128):
     # Convert Pillow image to OpenCV format (BGR)
     pillow_image = root.file_manager.current_image
+    root.history.append(pillow_image.copy())
     cv2_image = cv2.cvtColor(np.array(pillow_image), cv2.COLOR_RGB2BGR)
 
     # Convert to grayscale

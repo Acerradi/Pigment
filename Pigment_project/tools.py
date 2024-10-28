@@ -237,6 +237,7 @@ class BucketTool(ColoredTool):
         super().__init__(root, canvas, color=color)
 
     def mouse_down(self, event):
+        self.root.history.append(self.root.file_manager.current_image.copy())
         # Get the starting coordinates
         x, y = event.x, event.y
         self.color = ImageColor.getrgb(self.color)
