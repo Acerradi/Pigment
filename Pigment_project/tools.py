@@ -140,18 +140,49 @@ class DrawTool(Tool):
 
 
 class EraserTool(Tool):
-    def __init__(self, root, canvas, size):
-        super().__init__(root, canvas, color="#FFFFFF")
+    def __init__(self, r_canvas, canvas, color, size):
+        super().__init__(r_canvas, canvas, color="#ffffff")
         self.size = size
-
-    def mouse_drag(self, event):
-        raise "EraserTool"
-
-    def mouse_move(self, event):
-        raise "EraserTool"
+        self.current_stroke = None
 
     def mouse_down(self, event):
-        raise "EraserTool"
+        """Start drawing when mouse button is pressed"""
+        if self.root.file_manager.current_image is not None:
+            # Save the current image to history for undo
+            self.root.history.append(self.root.file_manager.current_image.copy())
+        self.start_x, self.start_y = event.x, event.y
+        self.current_stroke = []
+
+    def mouse_move(self, event):
+        """Draw as the mouse is dragged"""
+        if self.start_x is not None and self.start_y is not None:
+            x1, y1 = self.start_x, self.start_y
+            x2, y2 = event.x, event.y
+
+            # Draw the line directly on the image
+            draw = ImageDraw.Draw(self.root.file_manager.current_image)
+            draw.line([x1, y1, x2, y2], fill=self.color, width=self.size)
+            # Add line points to current stroke
+            self.current_stroke.append(((x1, y1), (x2, y2)))
+            # Display the updated image on the canvas
+            self.root.display_image_on_canvas()
+
+            # Update start point for next motion
+            self.start_x, self.start_y = x2, y2
+
+    def mouse_up(self, event):
+        """Finalize drawing when mouse button is released"""
+        if self.current_stroke:
+            # Draw the entire stroke on the image
+            if self.root.file_manager.current_image is not None:
+                draw = ImageDraw.Draw(self.root.file_manager.current_image)
+                for (x1, y1), (x2, y2) in self.current_stroke:
+                    draw.line([x1, y1, x2, y2], fill=self.color, width=self.size)
+                self.root.display_image_on_canvas()
+
+        # Reset drawing state
+        self.start_x, self.start_y = None, None
+        self.current_stroke = []
 
 
 class BucketTool(Tool):
