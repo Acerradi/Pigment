@@ -218,8 +218,8 @@ class ColorPickerTool(Tool):
 
 
     def mouse_move(self, event):
-        raise "ColorPickerTool"
+        pass
 
     def mouse_up(self, event):
         self.root.drawing_color = self.color
-        raise "ColorPickerTool"
+        self.root.chose_tool(0)
