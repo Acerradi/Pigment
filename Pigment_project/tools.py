@@ -214,9 +214,6 @@ class ColorPickerTool(Tool):
         pix = self.file_manager.current_image.getpixel((x, y))
         self.color = pix
 
-
-
-
     def mouse_move(self, event):
         pass
 
