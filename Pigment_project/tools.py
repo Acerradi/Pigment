@@ -3,6 +3,9 @@ import tkinter
 import numpy as np
 from PIL import ImageDraw, ImageGrab
 
+from Pigment_project import canvas
+
+
 class Tool:
     def __init__(self, root, canvas, color):
         self.root = root
@@ -200,17 +203,18 @@ class BucketTool(Tool):
 
 
 class ColorPickerTool(Tool):
-    def __init__(self, root, canvas):
+    def __init__(self, root, canvas, file_manager):
         super().__init__(root, canvas, color=None)
+        self.file_manager = file_manager
 
     def mouse_down(self, event):
         self.canvas.update_idletasks()
-        x = self.canvas.winfo_rootx()+event.x
-        y = self.canvas.winfo_rooty()+event.y
-        image = ImageGrab.grab(bbox=(x,y,x+1,y+1))
+        x = event.x
+        y = event.y
+        pix = self.file_manager.current_image.getpixel((x, y))
+        self.color = pix
 
-        rgb_color = image.getpixel((0,0))
-        self.color = rgb_color
+
 
 
     def mouse_move(self, event):

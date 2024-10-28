@@ -43,7 +43,7 @@ class CustomCanvas:
             pass
         #  Color Picker tool
         if numb == 3:
-            self.tool = ColorPickerTool(self, self.canvas)
+            self.tool = ColorPickerTool(self, self.canvas, self.file_manager)
             self.tool.bind_events()
         # Rectangle Selection tool
         if numb == 4:
