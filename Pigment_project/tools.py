@@ -1,4 +1,6 @@
+import io
 import tkinter
+import pyautogui
 
 import numpy as np
 from PIL import ImageDraw, ImageColor, ImageTk, Image
@@ -231,7 +233,7 @@ class BucketTool(ColoredTool):
         # Update the canvas with the modified image
         self.root.display_image_on_canvas()
 
-    def mouse_middle(self, event):
+    def mouse_move(self, event):
         raise "BucketTool"
 
     def mouse_up(self, event):
@@ -261,15 +263,14 @@ class BucketTool(ColoredTool):
 
 #Finished
 class ColorPickerTool(ColoredTool):
-    def __init__(self, root, canvas, file_manager):
+    def __init__(self, root, canvas):
         super().__init__(root, canvas, color=None)
-        self.file_manager = file_manager
 
     def mouse_down(self, event):
         self.canvas.update_idletasks()
         x = event.x
         y = event.y
-        pix = self.file_manager.current_image.getpixel((x, y))
+        pix = self.root.file_manager.current_image.getpixel((x, y))
         self.color = pix
 
     def mouse_move(self, event):
@@ -278,3 +279,40 @@ class ColorPickerTool(ColoredTool):
     def mouse_up(self, event):
         self.root.drawing_color = self.color
         self.root.chose_tool(0)
+class DrawShape(ColoredTool):
+    def __init__(self, root, canvas, color, shape):
+        super().__init__(root, canvas, color=color)
+        self.ids = []
+        self.shape = shape
+    def mouse_down(self, event):
+        self.root.history.append(self.root.file_manager.current_image.copy())
+        # Record the initial point of the selection
+        self.selection_start = (event.x, event.y)
+
+    def mouse_move(self, event):
+        # Draw the selected shape dynamically as the mouse moves
+        if self.selection_start:
+            if self.ids:
+                self.canvas.delete(self.ids)
+
+            x1, y1 = self.selection_start
+            x2, y2 = event.x, event.y
+
+            if self.shape == "rectangle":
+                self.ids = self.canvas.create_rectangle(x1, y1, x2, y2, outline=self.color)
+            elif self.shape == "circle":
+                self.ids = self.canvas.create_oval(x1, y1, x2, y2, outline=self.color)
+            elif self.shape == "triangle":
+                # Calculate the top vertex for an isosceles triangle
+                top_x = (x1 + x2) / 2
+                self.ids = self.canvas.create_polygon(x1, y2, x2, y2, top_x, y1, outline=self.color, fill="")
+            elif self.shape == "line":
+                self.ids = self.canvas.create_line(x1, y1, x2, y2, fill=self.color)
+    def mouse_up(self, event):
+        x = self.root.canvas.winfo_rootx()
+        y = self.root.canvas.winfo_rooty()
+        width = self.root.canvas.winfo_width()
+        height = self.root.canvas.winfo_height()
+        screenshot = pyautogui.screenshot(region=(x, y, width, height))
+        self.root.file_manager.current_image = screenshot
+        self.root.display_image_on_canvas()

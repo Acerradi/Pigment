@@ -75,6 +75,18 @@ class MainWindow(tkinter.Tk):
         select_lasso_button = tkinter.Button(self.left_frame, text="select_lasso", command=lambda: canvas.chose_tool(6))
         select_lasso_button.grid(row=4, column=0)
 
+        draw_line_button = tkinter.Button(self.top_frame, text="Draw line",command=lambda: canvas.chose_tool(7))
+        draw_line_button.grid(row=0, column=0)
+
+        draw_rectangle_button = tkinter.Button(self.top_frame, text="Draw rectangle", command=lambda: canvas.chose_tool(8))
+        draw_rectangle_button.grid(row=0, column=1)
+
+        draw_circle_button = tkinter.Button(self.top_frame, text="Draw circle",command=lambda: canvas.chose_tool(9))
+        draw_circle_button.grid(row=0, column=2)
+        draw_triangle_button = tkinter.Button(self.top_frame, text="Draw triangle",
+                                            command=lambda: canvas.chose_tool(10))
+        draw_triangle_button.grid(row=0, column=3)
+
     def setup_menus(self, canvas, program):
         # Set up menus
         self.config(menu=self.menu)

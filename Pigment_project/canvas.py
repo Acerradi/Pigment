@@ -49,6 +49,14 @@ class CustomCanvas:
         # Lasso selection tool
         if numb == 6:
             self.tool = LassoSelection(self, self.canvas, self.overlay_canvas)
+        if numb == 7:
+            self.tool = DrawShape(self, self.canvas, self.drawing_color, "line")
+        if numb == 8:
+            self.tool = DrawShape(self, self.canvas, self.drawing_color, "rectangle")
+        if numb == 9:
+            self.tool = DrawShape(self, self.canvas, self.drawing_color, "circle")
+        if numb == 10:
+            self.tool = DrawShape(self, self.canvas, self.drawing_color, "triangle")
         self.tool.bind_events()
 
     def change_color(self):
