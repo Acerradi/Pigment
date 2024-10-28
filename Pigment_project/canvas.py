@@ -45,10 +45,10 @@ class CustomCanvas:
             self.tool = RectangleSelection(self, self.canvas, self.overlay_canvas)
         # Polygon Selection tool
         if numb == 5:
-            pass
+            self.tool = PolygonSelection(self, self.canvas, self.overlay_canvas)
         # Lasso selection tool
         if numb == 6:
-            pass
+            self.tool = LassoSelection(self, self.canvas, self.overlay_canvas)
         self.tool.bind_events()
 
     def change_color(self):
