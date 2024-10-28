@@ -87,25 +87,26 @@ class CustomCanvas:
             # Revert to the last saved state in the history
             self.file_manager.current_image = self.history.pop()
             self.display_image_on_canvas()
+
     def crop(self, crop_area):
         self.history.append(self.file_manager.current_image.copy())
         width,heigth = self.file_manager.current_image.size
         crop_area = (crop_area[0],crop_area[1],width-crop_area[2],heigth-crop_area[3])
         self.file_manager.current_image = self.file_manager.current_image.crop(crop_area)
         self.display_image_on_canvas()
-    def rotate_left(self):
+
+    def rotate(self, opt):
         self.history.append(self.file_manager.current_image.copy())
-        self.file_manager.current_image = self.file_manager.current_image.rotate(90)
+        if opt == 1:
+            self.file_manager.current_image = self.file_manager.current_image.rotate(90)
+        elif opt == 2:
+            self.file_manager.current_image = self.file_manager.current_image.rotate(270)
         self.display_image_on_canvas()
-    def rotate_right(self):
+
+    def flip(self, opt):
         self.history.append(self.file_manager.current_image.copy())
-        self.file_manager.current_image = self.file_manager.current_image.rotate(270)
-        self.display_image_on_canvas()
-    def flip_vertically(self):
-        self.history.append(self.file_manager.current_image.copy())
-        self.file_manager.current_image = self.file_manager.current_image.transpose(Image.FLIP_TOP_BOTTOM)
-        self.display_image_on_canvas()
-    def flip_horizontally(self):
-        self.history.append(self.file_manager.current_image.copy())
-        self.file_manager.current_image = self.file_manager.current_image.transpose(Image.FLIP_LEFT_RIGHT)
+        if opt == 3:
+            self.file_manager.current_image = self.file_manager.current_image.transpose(Image.FLIP_TOP_BOTTOM)
+        elif opt == 4:
+            self.file_manager.current_image = self.file_manager.current_image.transpose(Image.FLIP_LEFT_RIGHT)
         self.display_image_on_canvas()
