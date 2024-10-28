@@ -41,7 +41,7 @@ class ColoredTool(Tool):
 class SelectionTool(Tool):
     def __init__(self, root, canvas, overlay):
         super().__init__(root, canvas)
-        #self.overlay_canvas = overlay
+        self.overlay_canvas = overlay
         self.selection_points = []
         self.image = self.root.file_manager.current_image
         self.ids = []
@@ -110,21 +110,26 @@ class RectangleSelection(SelectionTool):
 class PolygonSelection(SelectionTool):
     def __init__(self, r_canvas, canvas, overlay):
         super().__init__(r_canvas, canvas, overlay)
+        self.points = []
 
     def mouse_down(self, event):
         # Append each point as the user clicks
         self.selection_points.append((event.x, event.y))
         # Draw small circles for each vertex on the canvas
-        self.canvas.create_oval(event.x - 2, event.y - 2, event.x + 2, event.y + 2, fill="red")
+        self.points.append(self.canvas.create_oval(event.x - 2, event.y - 2, event.x + 2, event.y + 2, fill="red"))
         if len(self.selection_points) > 1:
             # Draw lines connecting points
-            self.canvas.create_line(self.selection_points[-2], self.selection_points[-1], fill="red")
+            self.ids.append(self.canvas.create_line(self.selection_points[-2], self.selection_points[-1], fill="red"))
 
     def mouse_move(self, event):
         pass
 
     def mouse_up(self, event):
         if len(self.selection_points) > 2 and self.in_range():
+            for id in self.ids:
+                self.canvas.delete(id)
+            for point in self.points:
+                self.canvas.delete(point)
             self.extract_selected_Area()
 
 
