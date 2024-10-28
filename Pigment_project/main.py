@@ -97,6 +97,7 @@ class MainWindow(tkinter.Tk):
 
         self.filter_menu.add_command(label="Gaussian", command=lambda:self.gaussian(canvas))
         self.filter_menu.add_command(label="Sobel", command=lambda: self.sobel(canvas))
+        self.filter_menu.add_command(label="Binary", command=lambda: self.binary(canvas))
 
     def new_main_window(self,program):
         program.root.destroy()
@@ -171,6 +172,8 @@ class MainWindow(tkinter.Tk):
         gaussian(canvas)
     def sobel(self, canvas):
         sobel(canvas)
+    def binary(self,canvas):
+        apply_binary_filter(canvas)
     def run(self):
         # Execute tkinter
         self.mainloop()

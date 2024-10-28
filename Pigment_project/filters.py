@@ -50,3 +50,19 @@ def sobel(root: CustomCanvas):
     # Convert the processed image to a Pillow image and update the canvas
     root.file_manager.current_image = cv2_2_pillow(sobel_magnitude)
     root.display_image_on_canvas()
+
+
+def apply_binary_filter(root:CustomCanvas, threshold=128):
+    # Convert Pillow image to OpenCV format (BGR)
+    pillow_image = root.file_manager.current_image
+    cv2_image = cv2.cvtColor(np.array(pillow_image), cv2.COLOR_RGB2BGR)
+
+    # Convert to grayscale
+    gray_image = cv2.cvtColor(cv2_image, cv2.COLOR_BGR2GRAY)
+
+    # Apply binary thresholding
+    _, binary_image = cv2.threshold(gray_image, threshold, 255, cv2.THRESH_BINARY)
+
+    # Convert back to Pillow format
+    root.file_manager.current_image = Image.fromarray(binary_image)
+    root.display_image_on_canvas()
