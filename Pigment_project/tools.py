@@ -39,10 +39,12 @@ class ColoredTool(Tool):
         self.color = color
 
 class SelectionTool(Tool):
-    def __init__(self, root, canvas):
+    def __init__(self, root, canvas, overlay):
         super().__init__(root, canvas)
+        #self.overlay_canvas = overlay
         self.selection_points = []
         self.image = self.root.file_manager.current_image
+        self.ids = []
 
     def extract_selected_Area(self):
         mask = Image.new('L', self.image.size, 0)
@@ -64,12 +66,17 @@ class SelectionTool(Tool):
         self.overlay_canvas.image = overlay_image  # Keep a reference to avoid garbage collection
         self.overlay_canvas.lift()  # Bring overlay to front
 
+    def in_range(self):
+        x1, y1 = self.selection_points[0]
+        x2, y2 = self.selection_points[-1]
+        return True if x1+2 > x2 > x1-2 and y1+2 > y2 > y1-2 else False
+
+
 class RectangleSelection(SelectionTool):
-    def __init__(self, r_canvas, canvas):
-        super().__init__(r_canvas, canvas)
+    def __init__(self, r_canvas, canvas, overlay):
+        super().__init__(r_canvas, canvas, overlay)
         self.selection_start = None
         self.selection_end = None
-        self.rectangle_id = None
 
     def mouse_down(self, event):
         # Record the initial point of the selection
@@ -79,10 +86,10 @@ class RectangleSelection(SelectionTool):
         # Draw a rectangle from the initial click to the current mouse position
         if self.selection_start:
             # Remove the previous rectangle
-            if self.rectangle_id:
-                self.canvas.delete(self.rectangle_id)
+            if self.ids:
+                self.canvas.delete(self.ids)
             # Draw the new rectangle
-            self.rectangle_id = self.canvas.create_rectangle(self.selection_start[0], self.selection_start[1],
+            self.ids = self.canvas.create_rectangle(self.selection_start[0], self.selection_start[1],
                                                              event.x, event.y, outline='red')
 
     def mouse_up(self, event):
@@ -96,48 +103,55 @@ class RectangleSelection(SelectionTool):
             self.selection_points.append((x2, y1))
             self.selection_points.append((x1, y2))
             self.selection_points.append((x2, y2))
+            self.canvas.delete(self.ids)
             self.extract_selected_Area()
 
 
 class PolygonSelection(SelectionTool):
-    def __init__(self, r_canvas,  canvas):
-        super().__init__(r_canvas, canvas)
-        self.polygon_points = []
+    def __init__(self, r_canvas, canvas, overlay):
+        super().__init__(r_canvas, canvas, overlay)
 
     def mouse_down(self, event):
-        # Add coordinate points to the polygon
-        self.polygon_points.append((event.x, event.y))
-        if len(self.polygon_points) > 1:
-            self.canvas.create_line(self.polygon_points[-2], self.polygon_points[-1], fill='red')
-        self.canvas.create_oval(event.x-3, event.y-3, event.x+3, event.y+3, fill='blue')
+        # Append each point as the user clicks
+        self.selection_points.append((event.x, event.y))
+        # Draw small circles for each vertex on the canvas
+        self.canvas.create_oval(event.x - 2, event.y - 2, event.x + 2, event.y + 2, fill="red")
+        if len(self.selection_points) > 1:
+            # Draw lines connecting points
+            self.canvas.create_line(self.selection_points[-2], self.selection_points[-1], fill="red")
 
     def mouse_move(self, event):
-        # No need to add anything
         pass
 
     def mouse_up(self, event):
-        if len(self.polygon_points) > 2:
-            self.canvas.create_line(self.polygon_points[-1], self.polygon_points[0], fill='red')
+        if len(self.selection_points) > 2 and self.in_range():
+            self.extract_selected_Area()
 
 
 class LassoSelection(SelectionTool):
-    def __init__(self, r_canvas, canvas):
-        super().__init__(r_canvas, canvas)
-        self.lasso_points = []
+    def __init__(self, r_canvas, canvas, overlay):
+        super().__init__(r_canvas, canvas, overlay)
+        self.lasso_path = []
 
     def mouse_down(self, event):
-        # Add a point to the lasso_points list
-        self.lasso_points.append((event.x, event.y))
+        self.selection_points = [(event.x, event.y)]  # Start new lasso path
 
     def mouse_move(self, event):
-        # Add points to the lasso path as the mouse moves
-        self.lasso_points.append((event.x, event.y))
-        self.canvas.create_line(self.lasso_points[-2], self.lasso_points[-1], fill='red')
+        # Append points as the user drags
+        if self.selection_points:
+            self.selection_points.append((event.x, event.y))
+            if self.lasso_path:
+                self.canvas.delete(self.lasso_path)
+            # Draw the current path
+            self.lasso_path = self.canvas.create_line(self.selection_points, fill="red", smooth=True)
 
     def mouse_up(self, event):
-        #Finalize the lasso selection
-        raise "LassoSelection"
-        pass
+        # Close the lasso path by connecting last point to the first
+        if len(self.selection_points) > 2:
+            self.selection_points.append(self.selection_points[0])  # Close the loop
+            if self.lasso_path:
+                self.canvas.delete(self.lasso_path)  # Remove the path preview
+            self.extract_selected_Area()
 
 #Finished
 class DrawTool(ColoredTool):
@@ -186,50 +200,9 @@ class DrawTool(ColoredTool):
         self.current_stroke = []
 
 #Finished
-class EraserTool(ColoredTool):
+class EraserTool(DrawTool):
     def __init__(self, r_canvas, canvas, size):
-        super().__init__(r_canvas, canvas, color="#ffffff")
-        self.size = size
-        self.current_stroke = None
-
-    def mouse_down(self, event):
-        """Start drawing when mouse button is pressed"""
-        if self.root.file_manager.current_image is not None:
-            # Save the current image to history for undo
-            self.root.history.append(self.root.file_manager.current_image.copy())
-        self.start_x, self.start_y = event.x, event.y
-        self.current_stroke = []
-
-    def mouse_move(self, event):
-        """Draw as the mouse is dragged"""
-        if self.start_x is not None and self.start_y is not None:
-            x1, y1 = self.start_x, self.start_y
-            x2, y2 = event.x, event.y
-
-            # Draw the line directly on the image
-            draw = ImageDraw.Draw(self.root.file_manager.current_image)
-            draw.line([x1, y1, x2, y2], fill=self.color, width=self.size)
-            # Add line points to current stroke
-            self.current_stroke.append(((x1, y1), (x2, y2)))
-            # Display the updated image on the canvas
-            self.root.display_image_on_canvas()
-
-            # Update start point for next motion
-            self.start_x, self.start_y = x2, y2
-
-    def mouse_up(self, event):
-        """Finalize drawing when mouse button is released"""
-        if self.current_stroke:
-            # Draw the entire stroke on the image
-            if self.root.file_manager.current_image is not None:
-                draw = ImageDraw.Draw(self.root.file_manager.current_image)
-                for (x1, y1), (x2, y2) in self.current_stroke:
-                    draw.line([x1, y1, x2, y2], fill=self.color, width=self.size)
-                self.root.display_image_on_canvas()
-
-        # Reset drawing state
-        self.start_x, self.start_y = None, None
-        self.current_stroke = []
+        super().__init__(r_canvas, canvas, "#ffffff", size)
 
 #Finished
 class BucketTool(ColoredTool):

@@ -66,6 +66,15 @@ class MainWindow(tkinter.Tk):
         bucket_tool_button = tkinter.Button(self.left_frame, text = "Bucket", command=lambda:canvas.chose_tool(numb=2))
         bucket_tool_button.grid(row=1, column=1)
 
+        select_rectangle_button = tkinter.Button(self.left_frame, text = "rectangle_select", command=lambda:canvas.chose_tool(4))
+        select_rectangle_button.grid(row=2, column=0)
+
+        select_polygon_button = tkinter.Button(self.left_frame, text = "select_polygon", command=lambda:canvas.chose_tool(5))
+        select_polygon_button.grid(row=3, column=0)
+
+        select_lasso_button = tkinter.Button(self.left_frame, text="select_lasso", command=lambda: canvas.chose_tool(6))
+        select_lasso_button.grid(row=4, column=0)
+
     def setup_menus(self, canvas, program):
         # Set up menus
         self.config(menu=self.menu)

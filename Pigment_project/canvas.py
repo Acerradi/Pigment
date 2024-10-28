@@ -13,6 +13,8 @@ class CustomCanvas:
         self.root = root
         self.canvas = tk.Canvas(root, width=500, height=500)
         self.canvas.pack(fill='both', expand=True)
+        self.overlay_canvas = tk.Canvas(root, width=500, height=500, bg=None, highlightthickness=0)
+        self.overlay_canvas.pack(fill='both', expand=True)
         self.display_image_on_canvas()
 
         # Attributes to track drawing
@@ -23,38 +25,31 @@ class CustomCanvas:
 
         # Keep track of the drawing history (for undo)
         self.history = []
-        # Bind mouse events
-        #self.canvas.bind("<ButtonPress-1>", self.on_mouse_down)  # Mouse click
-        #self.canvas.bind("<B1-Motion>", self.on_mouse_move)  # Mouse drag
-        #self.canvas.bind("<ButtonRelease-1>", self.on_mouse_up)  # Mouse release
         self.chose_tool(0)
 
     def chose_tool(self, numb):
         # Drawing tool
         if numb == 0:
             self.tool = DrawTool(self, self.canvas, self.drawing_color, self.drawing_size)
-            self.tool.bind_events()
         # Eraser tool
         if numb == 1:
             self.tool = EraserTool(self, self.canvas, self.drawing_size)
-            self.tool.bind_events()
         # Bucket tool
         if numb == 2:
             self.tool = BucketTool(self, self.canvas, self.drawing_color)
-            self.tool.bind_events()
         #  Color Picker tool
         if numb == 3:
             self.tool = ColorPickerTool(self, self.canvas, self.file_manager)
-            self.tool.bind_events()
         # Rectangle Selection tool
         if numb == 4:
-            pass
+            self.tool = RectangleSelection(self, self.canvas, self.overlay_canvas)
         # Polygon Selection tool
         if numb == 5:
             pass
         # Lasso selection tool
         if numb == 6:
             pass
+        self.tool.bind_events()
 
     def change_color(self):
         color = colorchooser.askcolor(title = "choose color")
