@@ -1,18 +1,17 @@
 import tkinter
 
 import numpy as np
-from PIL import ImageDraw, ImageGrab, Image, ImageColor
+from PIL import ImageDraw, ImageColor, ImageTk, Image
 
 from Pigment_project import canvas
 
 
 class Tool:
-    def __init__(self, root, canvas, color):
+    def __init__(self, root, canvas):
         self.root = root
         self.canvas = canvas
         self.start_x = None
         self.start_y = None
-        self.color = color
         self.bind_events()
 
     def mouse_down(self, event):
@@ -34,30 +33,75 @@ class Tool:
         self.canvas.bind("<B1-Motion>", self.mouse_move)
         self.canvas.bind("<ButtonRelease-1>", self.mouse_up)
 
+class ColoredTool(Tool):
+    def __init__(self, root, canvas, color):
+        super().__init__(root, canvas)
+        self.color = color
 
-class RectangleSelection(Tool):
+class SelectionTool(Tool):
+    def __init__(self, root, canvas):
+        super().__init__(root, canvas)
+        self.selection_points = []
+        self.image = self.root.file_manager.current_image
+
+    def extract_selected_Area(self):
+        mask = Image.new('L', self.image.size, 0)
+        draw = ImageDraw.Draw(mask)
+
+        draw.polygon(self.selection_points, fill=255)
+
+        selected_Area = Image.composite(self.image, Image.new("RGBA", self.image.size), mask)
+
+        self.display_on_overlay(selected_Area)
+
+    def display_on_overlay(self, area):
+        # Convert to PhotoImage for tkinter
+        overlay_image = ImageTk.PhotoImage(area)
+
+        # Display on overlay canvas at (0,0)
+        self.overlay_canvas.delete("all")
+        self.overlay_canvas.create_image(0, 0, anchor="nw", image=overlay_image)
+        self.overlay_canvas.image = overlay_image  # Keep a reference to avoid garbage collection
+        self.overlay_canvas.lift()  # Bring overlay to front
+
+class RectangleSelection(SelectionTool):
     def __init__(self, r_canvas, canvas):
-        super().__init__(r_canvas, canvas, color=None)
-        self.selection = None
+        super().__init__(r_canvas, canvas)
+        self.selection_start = None
+        self.selection_end = None
+        self.rectangle_id = None
 
     def mouse_down(self, event):
-        #Start drawing the rectangle
-        super().mouse_down(event)
-        self.selection = self.canvas.create_rectangle(self.start_x, self.start_y, self.start_x, self.start_y, outline='red')
+        # Record the initial point of the selection
+        self.selection_start = (event.x, event.y)
 
     def mouse_move(self, event):
-        # Update the rectangle while moving the mouse
-        self.canvas.coords(self.selection, self.start_x, self.start_y, event.x, event.y)
+        # Draw a rectangle from the initial click to the current mouse position
+        if self.selection_start:
+            # Remove the previous rectangle
+            if self.rectangle_id:
+                self.canvas.delete(self.rectangle_id)
+            # Draw the new rectangle
+            self.rectangle_id = self.canvas.create_rectangle(self.selection_start[0], self.selection_start[1],
+                                                             event.x, event.y, outline='red')
 
     def mouse_up(self, event):
-        # Finalize the rectangle selection
-        raise "RectangleSelection"
-        pass
+        # Record the final point of the selection
+        self.selection_end = (event.x, event.y)
+        # Ensure both points are defined for further processing
+        if self.selection_start and self.selection_end:
+            x1, y1 = self.selection_start
+            x2, y2 = self.selection_end
+            self.selection_points.append((x1, y1))
+            self.selection_points.append((x2, y1))
+            self.selection_points.append((x1, y2))
+            self.selection_points.append((x2, y2))
+            self.extract_selected_Area()
 
 
-class PolygonSelection(Tool):
+class PolygonSelection(SelectionTool):
     def __init__(self, r_canvas,  canvas):
-        super().__init__(r_canvas, canvas, color=None)
+        super().__init__(r_canvas, canvas)
         self.polygon_points = []
 
     def mouse_down(self, event):
@@ -76,9 +120,9 @@ class PolygonSelection(Tool):
             self.canvas.create_line(self.polygon_points[-1], self.polygon_points[0], fill='red')
 
 
-class LassoSelection(Tool):
+class LassoSelection(SelectionTool):
     def __init__(self, r_canvas, canvas):
-        super().__init__(r_canvas, canvas, color=None)
+        super().__init__(r_canvas, canvas)
         self.lasso_points = []
 
     def mouse_down(self, event):
@@ -95,8 +139,8 @@ class LassoSelection(Tool):
         raise "LassoSelection"
         pass
 
-
-class DrawTool(Tool):
+#Finished
+class DrawTool(ColoredTool):
     def __init__(self,r_canvas, canvas, color, size):
         super().__init__(r_canvas, canvas, color=color)
         self.size = size
@@ -141,8 +185,8 @@ class DrawTool(Tool):
         self.start_x, self.start_y = None, None
         self.current_stroke = []
 
-
-class EraserTool(Tool):
+#Finished
+class EraserTool(ColoredTool):
     def __init__(self, r_canvas, canvas, size):
         super().__init__(r_canvas, canvas, color="#ffffff")
         self.size = size
@@ -187,11 +231,8 @@ class EraserTool(Tool):
         self.start_x, self.start_y = None, None
         self.current_stroke = []
 
-
-from PIL import Image
-
-
-class BucketTool(Tool):
+#Finished
+class BucketTool(ColoredTool):
     def __init__(self, root, canvas, color):
         super().__init__(root, canvas, color=color)
 
@@ -239,8 +280,8 @@ class BucketTool(Tool):
             stack.append((x, y + 1))  # Down
             stack.append((x, y - 1))  # Up
 
-
-class ColorPickerTool(Tool):
+#Finished
+class ColorPickerTool(ColoredTool):
     def __init__(self, root, canvas, file_manager):
         super().__init__(root, canvas, color=None)
         self.file_manager = file_manager

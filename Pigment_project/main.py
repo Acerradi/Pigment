@@ -64,7 +64,6 @@ class MainWindow(tkinter.Tk):
         bucket_tool_button = tkinter.Button(self.left_frame, text = "Bucket", command=lambda:canvas.chose_tool(numb=2))
         bucket_tool_button.grid(row=1, column=1)
 
-
     def setup_menus(self, canvas, program):
         # Set up menus
         self.config(menu=self.menu)
