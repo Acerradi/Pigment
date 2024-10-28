@@ -2,8 +2,9 @@ import tkinter
 from tkinter import *
 from tkinter import filedialog
 
+
 from canvas import CustomCanvas
-from file_manager import FileManager
+from filters import *
 
 def print_sentence():
     print('hello world')
@@ -22,6 +23,7 @@ class MainWindow(tkinter.Tk):
         self.file_menu = Menu(self)
         self.image_menu = Menu(self)
         self.help_menu = Menu(self)
+        self.filter_menu = Menu(self)
 
         # Create all window objects
         self.top_frame = None
@@ -72,6 +74,7 @@ class MainWindow(tkinter.Tk):
         self.menu.add_cascade(label='Image', menu=self.image_menu)
         self.menu.add_cascade(label='Undo', command=canvas.undo)
         self.menu.add_cascade(label='Help', menu=self.help_menu)
+        self.menu.add_cascade(label="Filters", menu=self.filter_menu)
 
 
         # Set up file_menu
@@ -92,6 +95,9 @@ class MainWindow(tkinter.Tk):
 
         # Set up help_menu
         self.help_menu.add_command(label='Help', command=print_sentence)
+
+        self.filter_menu.add_command(label="Gaussian", command=lambda:self.gaussian(canvas))
+        self.filter_menu.add_command(label="Sobel", command=lambda: self.sobel(canvas))
 
     def new_main_window(self,program):
         program.root.destroy()
@@ -162,7 +168,10 @@ class MainWindow(tkinter.Tk):
             canvas.rotate(opt)
         elif opt <= 4:
             canvas.flip(opt)
-
+    def gaussian(self, canvas):
+        gaussian(canvas)
+    def sobel(self, canvas):
+        sobel(canvas)
     def run(self):
         # Execute tkinter
         self.mainloop()
