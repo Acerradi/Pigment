@@ -1,14 +1,16 @@
 import tkinter as tk
 from tkinter import colorchooser
-from PIL import Image, ImageTk, ImageDraw
+from PIL import Image, ImageTk
 import cv2
 from file_manager import FileManager
+from tools import *
 
 
 # Function that handles mouse movements and draws on the canvas
 class CustomCanvas:
     def __init__(self, root):
         self.file_manager = FileManager()
+        self.root = root
         self.canvas = tk.Canvas(root, width=500, height=500)
         self.canvas.pack(fill='both', expand=True)
         self.display_image_on_canvas()
@@ -22,52 +24,45 @@ class CustomCanvas:
         # Keep track of the drawing history (for undo)
         self.history = []
         # Bind mouse events
-        self.canvas.bind("<ButtonPress-1>", self.on_mouse_down)  # Mouse click
-        self.canvas.bind("<B1-Motion>", self.on_mouse_move)  # Mouse drag
-        self.canvas.bind("<ButtonRelease-1>", self.on_mouse_up)  # Mouse release
+        #self.canvas.bind("<ButtonPress-1>", self.on_mouse_down)  # Mouse click
+        #self.canvas.bind("<B1-Motion>", self.on_mouse_move)  # Mouse drag
+        #self.canvas.bind("<ButtonRelease-1>", self.on_mouse_up)  # Mouse release
+        self.chose_tool(0)
 
-    def on_mouse_down(self, event):
-        """Start drawing when mouse button is pressed"""
-        if self.file_manager.current_image is not None:
-            # Save the current image to history for undo
-            self.history.append(self.file_manager.current_image.copy())
-        self.start_x, self.start_y = event.x, event.y
-        self.current_stroke = []
-
-    def on_mouse_move(self, event):
-        """Draw as the mouse is dragged"""
-        if self.start_x is not None and self.start_y is not None:
-            x1, y1 = self.start_x, self.start_y
-            x2, y2 = event.x, event.y
-
-            # Draw the line directly on the image
-            draw = ImageDraw.Draw(self.file_manager.current_image)
-            draw.line([x1, y1, x2, y2], fill=self.drawing_color, width=self.drawing_size)
-            # Add line points to current stroke
-            self.current_stroke.append(((x1, y1), (x2, y2)))
-            # Display the updated image on the canvas
-            self.display_image_on_canvas()
-
-            # Update start point for next motion
-            self.start_x, self.start_y = x2, y2
-
-    def on_mouse_up(self, event):
-        """Finalize drawing when mouse button is released"""
-        if self.current_stroke:
-            # Draw the entire stroke on the image
-            if self.file_manager.current_image is not None:
-                draw = ImageDraw.Draw(self.file_manager.current_image)
-                for (x1, y1), (x2, y2) in self.current_stroke:
-                    draw.line([x1, y1, x2, y2], fill=self.drawing_color, width=self.drawing_size)
-                self.display_image_on_canvas()
-
-        # Reset drawing state
-        self.start_x, self.start_y = None, None
-        self.current_stroke = []
+    def chose_tool(self, numb):
+        # Drawing tool
+        if numb == 0:
+            self.tool = DrawTool(self, self.canvas, self.drawing_color, self.drawing_size)
+            self.tool.bind_events()
+        # Eraser tool
+        if numb == 1:
+            self.tool = EraserTool(self, self.canvas, self.drawing_size)
+            self.tool.bind_events()
+        # Bucket tool
+        if numb == 2:
+            pass
+        #  Color Picker tool
+        if numb == 3:
+            self.tool = ColorPickerTool(self, self.canvas)
+            self.tool.bind_events()
+        # Rectangle Selection tool
+        if numb == 4:
+            pass
+        # Polygon Selection tool
+        if numb == 5:
+            pass
+        # Lasso selection tool
+        if numb == 6:
+            pass
 
     def change_color(self):
         color = colorchooser.askcolor(title = "choose color")
-        self.drawing_color = color[1]
+        if color is not None:
+            self.drawing_color = color[1]
+            self.tool.color = color[1]
+
+    def change_drawing_size(self):
+        pass
 
     def display_image_on_canvas(self):
         canvas = self.canvas

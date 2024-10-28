@@ -51,15 +51,19 @@ class MainWindow(tkinter.Tk):
     def setup_main_frames(self, canvas):
         change_color_button = tkinter.Button(self.right_frame, text = "Select color", command=canvas.change_color)
         change_color_button.grid(row=0, column=0)
-        change_color_button.pack()
 
-        draw_tool_button = tkinter.Button(self.left_frame, text = "Draw", command=print_sentence)
+        draw_tool_button = tkinter.Button(self.left_frame, text = "Draw", command=lambda:canvas.chose_tool(numb=0))
         draw_tool_button.grid(row=0, column=0)
-        draw_tool_button.pack()
 
-        erase_tool_button = tkinter.Button(self.left_frame, text = "Erase", command=print_sentence)
+        erase_tool_button = tkinter.Button(self.left_frame, text = "Erase", command=lambda:canvas.chose_tool(numb=1))
         erase_tool_button.grid(row=0, column=1)
-        erase_tool_button.pack()
+
+        color_picker_button = tkinter.Button(self.left_frame, text = "Pick", command=lambda:canvas.chose_tool(numb=3))
+        color_picker_button.grid(row=1, column=0)
+
+        bucket_tool_button = tkinter.Button(self.left_frame, text = "Bucket", command=lambda:canvas.chose_tool(numb=2))
+        bucket_tool_button.grid(row=1, column=1)
+
 
     def setup_menus(self, canvas, program):
         # Set up menus
@@ -164,6 +168,7 @@ class MainWindow(tkinter.Tk):
         self.mainloop()
 
 
+
 # Main Class
 class Pigment:
     def __init__(self, XY):
@@ -178,6 +183,7 @@ class Pigment:
         self.canvas = CustomCanvas(self.root.canvas_frame)
         self.root.setup_menus(self.canvas, self)
         self.root.setup_main_frames(self.canvas)
+        self.canvas.chose_tool(0)
         self.root.run()
 
 def run1():
