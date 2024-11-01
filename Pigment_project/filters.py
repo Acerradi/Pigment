@@ -2,6 +2,7 @@ from PIL import Image, ImageFilter
 import numpy as np
 import cv2
 from canvas import CustomCanvas
+
 def pillow_2_cv2(pillow_image:Image):
     # Convert the Pillow image to RGB (in case it's not)
     if pillow_image.mode != 'RGB':
@@ -13,6 +14,7 @@ def pillow_2_cv2(pillow_image:Image):
     # Convert RGB to BGR format for OpenCV
     opencv_image = cv2.cvtColor(opencv_image, cv2.COLOR_RGB2BGR)
     return opencv_image
+
 def cv2_2_pillow(opencv_image):
     # Convert the image from BGR to RGB
     rgb_image = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2RGB)
@@ -20,6 +22,7 @@ def cv2_2_pillow(opencv_image):
     # Convert the NumPy array to a Pillow image
     pillow_image = Image.fromarray(rgb_image)
     return pillow_image
+
 def gaussian(root:CustomCanvas):
     image = root.file_manager.current_image
     root.history.append(image.copy())

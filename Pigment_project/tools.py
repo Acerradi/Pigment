@@ -1,5 +1,7 @@
 import io
 import tkinter
+from typing import Tuple
+
 import pyautogui
 
 import numpy as np
@@ -220,7 +222,8 @@ class BucketTool(ColoredTool):
         self.root.history.append(self.root.file_manager.current_image.copy())
         # Get the starting coordinates
         x, y = event.x, event.y
-        self.color = ImageColor.getrgb(self.color)
+        if type(self.color) != tuple:
+            self.color = ImageColor.getrgb(self.color)
 
         # Get the image from the canvas (assuming canvas is associated with an image)
         self.image = self.root.file_manager.current_image
@@ -234,10 +237,10 @@ class BucketTool(ColoredTool):
         self.root.display_image_on_canvas()
 
     def mouse_move(self, event):
-        raise "BucketTool"
+        pass
 
     def mouse_up(self, event):
-        raise "BucketTool"
+        pass
 
     def flood_fill(self, x, y, target_color, fill_color):
         width, height = self.image.size
@@ -263,14 +266,15 @@ class BucketTool(ColoredTool):
 
 #Finished
 class ColorPickerTool(ColoredTool):
-    def __init__(self, root, canvas):
+    def __init__(self, root, canvas, file_manager):
         super().__init__(root, canvas, color=None)
+        self.file_manager = file_manager
 
     def mouse_down(self, event):
         self.canvas.update_idletasks()
         x = event.x
         y = event.y
-        pix = self.root.file_manager.current_image.getpixel((x, y))
+        pix = self.file_manager.current_image.getpixel((x, y))
         self.color = pix
 
     def mouse_move(self, event):
@@ -279,6 +283,8 @@ class ColorPickerTool(ColoredTool):
     def mouse_up(self, event):
         self.root.drawing_color = self.color
         self.root.chose_tool(0)
+
+#Finished
 class DrawShape(ColoredTool):
     def __init__(self, root, canvas, color, shape):
         super().__init__(root, canvas, color=color)
