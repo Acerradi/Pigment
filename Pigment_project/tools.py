@@ -294,7 +294,6 @@ class DrawShape(ColoredTool):
         self.root.history.append(self.root.file_manager.current_image.copy())
         # Record the initial point of the selection
         self.selection_start = (event.x, event.y)
-
     def mouse_move(self, event):
         # Draw the selected shape dynamically as the mouse moves
         if self.selection_start:

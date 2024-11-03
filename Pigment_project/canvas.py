@@ -49,12 +49,16 @@ class CustomCanvas:
         # Lasso selection tool
         if numb == 6:
             self.tool = LassoSelection(self, self.canvas, self.overlay_canvas)
+        # Line drawing tool
         if numb == 7:
             self.tool = DrawShape(self, self.canvas, self.drawing_color, "line")
+        # Rectangle drawing tool
         if numb == 8:
             self.tool = DrawShape(self, self.canvas, self.drawing_color, "rectangle")
+        # Circle drawing tool
         if numb == 9:
             self.tool = DrawShape(self, self.canvas, self.drawing_color, "circle")
+        # Triangle drawing tool
         if numb == 10:
             self.tool = DrawShape(self, self.canvas, self.drawing_color, "triangle")
         self.tool.bind_events()
