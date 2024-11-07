@@ -1,9 +1,19 @@
 import tkinter as tk
-from tkinter import colorchooser
+from tkinter import colorchooser, ttk
 from PIL import Image, ImageTk
 import cv2
 from file_manager import FileManager
 from tools import *
+
+
+class AutoScrollbar(ttk.Scrollbar):
+    """ A scrollbar that hides itself if it's not needed. """
+    def set(self, lo, hi):
+        if float(lo) <= 0.0 and float(hi) >= 1.0:
+            self.grid_remove()
+        else:
+            self.grid()
+            ttk.Scrollbar.set(self, lo, hi)
 
 
 # Function that handles mouse movements and draws on the canvas
@@ -11,11 +21,22 @@ class CustomCanvas:
     def __init__(self, root):
         self.file_manager = FileManager()
         self.root = root
-        self.canvas = tk.Canvas(root, width=500, height=500)
+        self.canvas = tk.Canvas(root, width=500, height=500, xscrollcommand=self.scroll_x, yscrollcommand=self.scroll_y)
         self.canvas.pack(fill='both', expand=True)
         self.overlay_canvas = tk.Canvas(root, width=500, height=500, bg=None, highlightthickness=0)
         self.overlay_canvas.pack(fill='both', expand=True)
+
+        # Atributes for zoom and pan functionality
+        self.imscale = 1.0
+        self.delta = 1.3
+
         self.display_image_on_canvas()
+
+        # Add scrollbar
+        self.vbar = AutoScrollbar(root, orient='vertical', command=self.scroll_y)
+        self.hbar = AutoScrollbar(root, orient='horizontal', command=self.scroll_x)
+        self.vbar.pack(side='right', fill='y')
+        self.hbar.pack(side='bottom', fill='x')
 
         # Attributes to track drawing
         self.start_x, self.start_y = None, None
@@ -26,6 +47,31 @@ class CustomCanvas:
         # Keep track of the drawing history (for undo)
         self.history = []
         self.chose_tool(0)
+
+        # Bind zoom
+        self.canvas.bind('<MouseWheel>', self.wheel)
+
+    def scroll_y(self, *args):
+        self.canvas.yview(*args)
+        self.display_image_on_canvas()
+
+    def scroll_x(self, *args):
+        self.canvas.xview(*args)
+        self.display_image_on_canvas()
+
+    def wheel(self, event):
+        """ Zoom with mouse wheel """
+        x = self.canvas.canvasx(event.x)
+        y = self.canvas.canvasy(event.y)
+        scale = 1.0
+        if event.delta > 0:  # Scroll up
+            self.imscale *= self.delta
+            scale *= self.delta
+        elif event.delta < 0:  # Scroll down
+            self.imscale /= self.delta
+            scale /= self.delta
+        self.canvas.scale('all', x, y, scale, scale)
+        self.display_image_on_canvas()
 
     def chose_tool(self, numb):
         # Drawing tool
@@ -72,6 +118,7 @@ class CustomCanvas:
     def change_drawing_size(self):
         pass
 
+    """
     def display_image_on_canvas(self):
         canvas = self.canvas
         if self.file_manager.current_image is not None:
@@ -83,6 +130,33 @@ class CustomCanvas:
 
             # To prevent garbage collection of image in Tkinter
             canvas.img_tk = img_tk  # Save a reference to the image
+    """
+
+    def display_image_on_canvas(self):
+        """ Display the current image on the canvas with scaling """
+        if self.file_manager.current_image:
+            # Adjust visible portion of the image based on zoom
+            width, height = self.file_manager.current_image.size
+            scaled_width = int(width * self.imscale)
+            scaled_height = int(height * self.imscale)
+            self.canvas.config(scrollregion=(0, 0, scaled_width, scaled_height))
+
+            # Crop and resize for visible area
+            visible_region = (self.canvas.canvasx(0), self.canvas.canvasy(0),
+                              self.canvas.canvasx(self.canvas.winfo_width()),
+                              self.canvas.canvasy(self.canvas.winfo_height()))
+
+            crop_box = (int(visible_region[0] / self.imscale), int(visible_region[1] / self.imscale),
+                        int(visible_region[2] / self.imscale), int(visible_region[3] / self.imscale))
+
+            cropped_image = self.file_manager.current_image.crop(crop_box)
+            display_image = cropped_image.resize((int(visible_region[2] - visible_region[0]),
+                                                  int(visible_region[3] - visible_region[1])),
+                                                 Image.Resampling.LANCZOS)
+
+            self.tk_image = ImageTk.PhotoImage(display_image)
+            self.canvas.create_image(visible_region[0], visible_region[1], anchor='nw', image=self.tk_image)
+
 
     def undo(self):
         """Undo the last stroke"""

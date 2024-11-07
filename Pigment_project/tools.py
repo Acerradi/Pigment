@@ -16,7 +16,7 @@ class Tool:
         self.canvas = canvas
         self.start_x = None
         self.start_y = None
-        self.bind_events()
+
 
     def mouse_down(self, event):
         # When pressing the mouse button on the canvas
@@ -54,6 +54,8 @@ class SelectionTool(Tool):
         mask = Image.new('L', self.image.size, 0)
         draw = ImageDraw.Draw(mask)
 
+        self.selection_points = [(x/self.root.imscale, y/self.root.imscale) for x,y in self.selection_points]
+
         draw.polygon(self.selection_points, fill=255)
 
         selected_Area = Image.composite(self.image, Image.new("RGBA", self.image.size), mask)
@@ -73,7 +75,7 @@ class SelectionTool(Tool):
     def in_range(self):
         x1, y1 = self.selection_points[0]
         x2, y2 = self.selection_points[-1]
-        return True if x1+2 > x2 > x1-2 and y1+2 > y2 > y1-2 else False
+        return True if x1+5 > x2 > x1-5 and y1+5 > y2 > y1-5 else False
 
 
 class RectangleSelection(SelectionTool):
@@ -94,7 +96,7 @@ class RectangleSelection(SelectionTool):
                 self.canvas.delete(self.ids)
             # Draw the new rectangle
             self.ids = self.canvas.create_rectangle(self.selection_start[0], self.selection_start[1],
-                                                             event.x, event.y, outline='red')
+                                                    event.x, event.y, outline='red')
 
     def mouse_up(self, event):
         # Record the final point of the selection
@@ -104,9 +106,9 @@ class RectangleSelection(SelectionTool):
             x1, y1 = self.selection_start
             x2, y2 = self.selection_end
             self.selection_points.append((x1, y1))
-            self.selection_points.append((x2, y1))
             self.selection_points.append((x1, y2))
             self.selection_points.append((x2, y2))
+            self.selection_points.append((x2, y1))
             self.canvas.delete(self.ids)
             self.extract_selected_Area()
 
@@ -117,10 +119,11 @@ class PolygonSelection(SelectionTool):
         self.points = []
 
     def mouse_down(self, event):
+        x, y = event.x, event.y
         # Append each point as the user clicks
-        self.selection_points.append((event.x, event.y))
+        self.selection_points.append((x, y))
         # Draw small circles for each vertex on the canvas
-        self.points.append(self.canvas.create_oval(event.x - 2, event.y - 2, event.x + 2, event.y + 2, fill="red"))
+        self.points.append(self.canvas.create_oval(x - 2, y - 2, x + 2, y + 2, fill="red"))
         if len(self.selection_points) > 1:
             # Draw lines connecting points
             self.ids.append(self.canvas.create_line(self.selection_points[-2], self.selection_points[-1], fill="red"))
@@ -171,17 +174,18 @@ class DrawTool(ColoredTool):
 
     def mouse_down(self, event):
         """Start drawing when mouse button is pressed"""
+        x, y = event.x/self.root.imscale, event.y/self.root.imscale
         if self.root.file_manager.current_image is not None:
             # Save the current image to history for undo
             self.root.history.append(self.root.file_manager.current_image.copy())
-        self.start_x, self.start_y = event.x, event.y
+        self.start_x, self.start_y = x, y
         self.current_stroke = []
 
     def mouse_move(self, event):
         """Draw as the mouse is dragged"""
         if self.start_x is not None and self.start_y is not None:
             x1, y1 = self.start_x, self.start_y
-            x2, y2 = event.x, event.y
+            x2, y2 = event.x/self.root.imscale, event.y/self.root.imscale
 
             # Draw the line directly on the image
             draw = ImageDraw.Draw(self.root.file_manager.current_image)
@@ -221,7 +225,7 @@ class BucketTool(ColoredTool):
     def mouse_down(self, event):
         self.root.history.append(self.root.file_manager.current_image.copy())
         # Get the starting coordinates
-        x, y = event.x, event.y
+        x, y = event.x/self.root.imscale, event.y/self.root.imscale
         if type(self.color) != tuple:
             self.color = ImageColor.getrgb(self.color)
 
@@ -272,8 +276,8 @@ class ColorPickerTool(ColoredTool):
 
     def mouse_down(self, event):
         self.canvas.update_idletasks()
-        x = event.x
-        y = event.y
+        x = event.x/self.root.imscale
+        y = event.y/self.root.imscale
         pix = self.file_manager.current_image.getpixel((x, y))
         self.color = pix
 
@@ -293,7 +297,7 @@ class DrawShape(ColoredTool):
     def mouse_down(self, event):
         self.root.history.append(self.root.file_manager.current_image.copy())
         # Record the initial point of the selection
-        self.selection_start = (event.x, event.y)
+        self.selection_start = (event.x/self.root.imscale, event.y/self.root.imscale)
     def mouse_move(self, event):
         # Draw the selected shape dynamically as the mouse moves
         if self.selection_start:
@@ -301,7 +305,7 @@ class DrawShape(ColoredTool):
                 self.canvas.delete(self.ids)
 
             x1, y1 = self.selection_start
-            x2, y2 = event.x, event.y
+            x2, y2 = event.x/self.root.imscale, event.y/self.root.imscale
 
             if self.shape == "rectangle":
                 self.ids = self.canvas.create_rectangle(x1, y1, x2, y2, outline=self.color)
