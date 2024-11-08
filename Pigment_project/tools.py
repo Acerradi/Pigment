@@ -31,6 +31,11 @@ class Tool:
         # When releasing the mouse over the canvas
         raise NotImplementedError("This method should be overridden by subclasses")
 
+    def get_event_coords(self, event):
+        x = self.canvas.canvasx(event.x) / self.root.imscale
+        y = self.canvas.canvasy(event.y) / self.root.imscale
+        return x, y
+
     def bind_events(self):
         # Binds the mouse events onto the overlay canvas layer
         self.canvas.bind("<ButtonPress-1>", self.mouse_down)
@@ -174,7 +179,7 @@ class DrawTool(ColoredTool):
 
     def mouse_down(self, event):
         """Start drawing when mouse button is pressed"""
-        x, y = event.x/self.root.imscale, event.y/self.root.imscale
+        x, y = self.get_event_coords(event)
         if self.root.file_manager.current_image is not None:
             # Save the current image to history for undo
             self.root.history.append(self.root.file_manager.current_image.copy())
@@ -185,7 +190,7 @@ class DrawTool(ColoredTool):
         """Draw as the mouse is dragged"""
         if self.start_x is not None and self.start_y is not None:
             x1, y1 = self.start_x, self.start_y
-            x2, y2 = event.x/self.root.imscale, event.y/self.root.imscale
+            x2, y2 = self.get_event_coords(event)
 
             # Draw the line directly on the image
             draw = ImageDraw.Draw(self.root.file_manager.current_image)

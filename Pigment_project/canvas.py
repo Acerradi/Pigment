@@ -94,13 +94,13 @@ class CustomCanvas:
             self.tool = ColorPickerTool(self, self.canvas, self.file_manager)
         # Rectangle Selection tool
         if numb == 4:
-            self.tool = RectangleSelection(self, self.canvas, self.overlay_canvas)
+            self.tool = RectangleSelection(self, self.canvas, self.canvas)
         # Polygon Selection tool
         if numb == 5:
-            self.tool = PolygonSelection(self, self.canvas, self.overlay_canvas)
+            self.tool = PolygonSelection(self, self.canvas, self.canvas)
         # Lasso selection tool
         if numb == 6:
-            self.tool = LassoSelection(self, self.canvas, self.overlay_canvas)
+            self.tool = LassoSelection(self, self.canvas, self.canvas)
         # Line drawing tool
         if numb == 7:
             self.tool = DrawShape(self, self.canvas, self.drawing_color, "line")
