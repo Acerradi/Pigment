@@ -49,6 +49,9 @@ class MainWindow(tkinter.Tk):
         # Initialize the canvas frame in (row 1, column 1), and make it expand in all directions when the window expands
         self.canvas_frame = tkinter.Frame(self, bg='gray')
         self.canvas_frame.grid(row=1, column=1, sticky=tkinter.NSEW)
+        self.canvas_frame.grid_rowconfigure(0, weight=1)
+        self.canvas_frame.grid_columnconfigure(0, weight=1)
+
 
     def setup_main_frames(self, canvas):
         change_color_button = tkinter.Button(self.right_frame, text = "Select color", command=canvas.change_color)

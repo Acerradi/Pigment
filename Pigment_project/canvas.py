@@ -4,6 +4,7 @@ from PIL import Image, ImageTk
 import cv2
 from file_manager import FileManager
 from tools import *
+import time
 
 
 class AutoScrollbar(ttk.Scrollbar):
@@ -22,21 +23,21 @@ class CustomCanvas:
         self.file_manager = FileManager()
         self.root = root
         self.canvas = tk.Canvas(root, width=500, height=500, xscrollcommand=self.scroll_x, yscrollcommand=self.scroll_y)
-        self.canvas.pack(fill='both', expand=True)
-        self.overlay_canvas = tk.Canvas(root, width=500, height=500, bg=None, highlightthickness=0)
-        self.overlay_canvas.pack(fill='both', expand=True)
+        self.canvas.grid(row=0, column=0, sticky='nsew')
+        #self.overlay_canvas = tk.Canvas(root, width=500, height=500, bg=None, highlightthickness=0)
+        #self.overlay_canvas.pack(fill='both', expand=True)
 
         # Atributes for zoom and pan functionality
         self.imscale = 1.0
         self.delta = 1.3
 
-        self.display_image_on_canvas()
-
         # Add scrollbar
         self.vbar = AutoScrollbar(root, orient='vertical', command=self.scroll_y)
         self.hbar = AutoScrollbar(root, orient='horizontal', command=self.scroll_x)
-        self.vbar.pack(side='right', fill='y')
-        self.hbar.pack(side='bottom', fill='x')
+        self.canvas.config(xscrollcommand=self.hbar.set, yscrollcommand=self.vbar.set)
+
+        self.vbar.grid(row=0, column=1, sticky='ns')
+        self.hbar.grid(row=1, column=0, sticky='ew')
 
         # Attributes to track drawing
         self.start_x, self.start_y = None, None
@@ -50,6 +51,10 @@ class CustomCanvas:
 
         # Bind zoom
         self.canvas.bind('<MouseWheel>', self.wheel)
+
+        # Time tracking
+        self.last_draw_time = time.time()
+
 
     def scroll_y(self, *args):
         self.canvas.yview(*args)
@@ -72,6 +77,7 @@ class CustomCanvas:
             scale /= self.delta
         self.canvas.scale('all', x, y, scale, scale)
         self.display_image_on_canvas()
+
 
     def chose_tool(self, numb):
         # Drawing tool
@@ -134,7 +140,12 @@ class CustomCanvas:
 
     def display_image_on_canvas(self):
         """ Display the current image on the canvas with scaling """
+        current_time = time.time()
+        if current_time - self.last_draw_time < 0.05:
+            return
+        self.last_draw_time = current_time
         if self.file_manager.current_image:
+
             # Adjust visible portion of the image based on zoom
             width, height = self.file_manager.current_image.size
             scaled_width = int(width * self.imscale)
@@ -156,7 +167,6 @@ class CustomCanvas:
 
             self.tk_image = ImageTk.PhotoImage(display_image)
             self.canvas.create_image(visible_region[0], visible_region[1], anchor='nw', image=self.tk_image)
-
 
     def undo(self):
         """Undo the last stroke"""
