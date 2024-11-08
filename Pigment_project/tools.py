@@ -36,7 +36,14 @@ class Tool:
         x = self.canvas.canvasx(event.x) / self.root.imscale
         y = self.canvas.canvasy(event.y) / self.root.imscale
         return x, y
-
+    def get_event_coords_2(self,event):
+        x = self.canvas.canvasx(event.x)
+        y = self.canvas.canvasy(event.y)
+        return x, y
+    def get_event_coords_3(self,event):
+        x = event.x / self.root.imscale
+        y = event.y / self.root.imscale
+        return x, y
     def bind_events(self):
         # Binds the mouse events onto the overlay canvas layer
         self.canvas.bind("<ButtonPress-1>", self.mouse_down)
@@ -84,7 +91,7 @@ class SelectionTool(Tool):
 class RectangleSelection(SelectionTool):
     def __init__(self, r_canvas, canvas, overlay):
         super().__init__(r_canvas, canvas, overlay)
-        self.selection_start = None
+        self.selection_start_2 = None
         self.selection_end = None
     def crop_image(self, coords:[int,int,int,int]):
         image = self.root.file_manager.current_image.copy()
@@ -95,24 +102,27 @@ class RectangleSelection(SelectionTool):
         return cropped_image
     def mouse_down(self, event):
         # Record the initial point of the selection
-        self.selection_start = (event.x, event.y)
+        self.selection_start_1 = self.get_event_coords(event)
+        self.selection_start_2 = self.get_event_coords_2(event)
+        self.selection_start_3 = event.x, event.y
 
     def mouse_move(self, event):
+        x1,y1=self.selection_start_2
+        x2,y2 = self.get_event_coords_2(event)
         # Draw a rectangle from the initial click to the current mouse position
-        if self.selection_start:
+        if self.selection_start_2:
             # Remove the previous rectangle
             if self.ids:
                 self.canvas.delete(self.ids)
             # Draw the new rectangle
-            self.ids = self.canvas.create_rectangle(self.selection_start[0], self.selection_start[1],
-                                                    event.x, event.y, outline='red')
+            self.ids = self.canvas.create_rectangle(x1, y1,
+                                                    x2, y2, outline='red')
 
     def mouse_up(self, event):
         # Get the coordinates of the selection (top-left and bottom-right)
-        start_x = self.selection_start[0]
-        start_y = self.selection_start[1]
-        stop_x = event.x
-        stop_y = event.y
+        start_x, start_y = self.selection_start_1
+        stop_x, stop_y = self.get_event_coords(event)
+
 
         # Ensure we have the correct order (left, top, right, bottom)
         coords = [min(start_x, stop_x), min(start_y, stop_y), max(start_x, stop_x), max(start_y, stop_y)]
@@ -124,7 +134,7 @@ class RectangleSelection(SelectionTool):
         self.root.extracted_area = self.crop_image(coords)
 
         # Convert the extracted image to RGBA for drawing
-        overlay = self.root.extracted_area
+        overlay = self.root.extracted_area.copy()
 
         # Draw a rectangle on the overlay
         draw = ImageDraw.Draw(overlay)
@@ -133,10 +143,10 @@ class RectangleSelection(SelectionTool):
         draw.rectangle(rect_coords, outline='red')
 
         # Set the extracted position (top-left corner of selection)
-        self.root.extracted_position = self.selection_start
+        self.root.extracted_position = int(self.selection_start_1[0]), int(self.selection_start_1[1])
 
         # Display the overlay on the canvas
-        self.root.display_overlay_image_on_canvas(overlay, self.selection_start)
+        self.root.display_overlay_image_on_canvas(overlay, self.root.extracted_position)
 
 
 
@@ -326,7 +336,7 @@ class DrawShape(ColoredTool):
         self.root.history.append(self.root.file_manager.current_image.copy())
         # Record the initial point of the selection
         #self.selection_start = (event.x/self.root.imscale, event.y/self.root.imscale)
-        self.selection_start = (event.x,event.y)
+        self.selection_start = self.get_event_coords_2(event)
     def mouse_move(self, event):
         # Draw the selected shape dynamically as the mouse moves
         if self.selection_start:
@@ -335,7 +345,7 @@ class DrawShape(ColoredTool):
 
             x1, y1 = self.selection_start
             #x2, y2 = event.x/self.root.imscale, event.y/self.root.imscale
-            x2,y2 = event.x,event.y
+            x2,y2 = self.get_event_coords_2(event)
 
             if self.shape == "rectangle":
                 self.ids = self.canvas.create_rectangle(x1, y1, x2, y2, outline=self.color)
@@ -351,7 +361,7 @@ class DrawShape(ColoredTool):
         x1, y1 = self.selection_start
         x1 = x1 / self.root.imscale
         y1 = y1 / self.root.imscale
-        x2, y2 = event.x / self.root.imscale, event.y / self.root.imscale
+        x2, y2 = self.get_event_coords(event)
 
         # Correct ordering for the top-left and bottom-right coordinates
         left, right = min(x1, x2), max(x1, x2)
@@ -382,7 +392,8 @@ class PasteTool(Tool):
     def __init__(self, root,canvas):
         super().__init__(root, canvas)
     def mouse_down(self, event):
-        paste_pos = event.x, event.y
+        paste_pos = self.get_event_coords_3(event)
+        paste_pos = int(paste_pos[0]),int(paste_pos[1])
         if self.root.clipboard:
             if not self.root.cut:
                 self.root.history.append(self.root.file_manager.current_image.copy())
@@ -393,4 +404,5 @@ class PasteTool(Tool):
             self.root.clipboard=False
             self.root.extracted_area = None
             self.root.extracted_position = None
+            self.root.chose_tool(0)
 
