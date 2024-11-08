@@ -297,7 +297,8 @@ class DrawShape(ColoredTool):
     def mouse_down(self, event):
         self.root.history.append(self.root.file_manager.current_image.copy())
         # Record the initial point of the selection
-        self.selection_start = (event.x/self.root.imscale, event.y/self.root.imscale)
+        #self.selection_start = (event.x/self.root.imscale, event.y/self.root.imscale)
+        self.selection_start = (event.x,event.y)
     def mouse_move(self, event):
         # Draw the selected shape dynamically as the mouse moves
         if self.selection_start:
@@ -305,7 +306,8 @@ class DrawShape(ColoredTool):
                 self.canvas.delete(self.ids)
 
             x1, y1 = self.selection_start
-            x2, y2 = event.x/self.root.imscale, event.y/self.root.imscale
+            #x2, y2 = event.x/self.root.imscale, event.y/self.root.imscale
+            x2,y2 = event.x,event.y
 
             if self.shape == "rectangle":
                 self.ids = self.canvas.create_rectangle(x1, y1, x2, y2, outline=self.color)
@@ -318,10 +320,33 @@ class DrawShape(ColoredTool):
             elif self.shape == "line":
                 self.ids = self.canvas.create_line(x1, y1, x2, y2, fill=self.color)
     def mouse_up(self, event):
-        x = self.root.canvas.winfo_rootx()
-        y = self.root.canvas.winfo_rooty()
-        width = self.root.canvas.winfo_width()
-        height = self.root.canvas.winfo_height()
-        screenshot = pyautogui.screenshot(region=(x, y, width, height))
-        self.root.file_manager.current_image = screenshot
+        x1, y1 = self.selection_start
+        x1 = x1 / self.root.imscale
+        y1 = y1 / self.root.imscale
+        x2, y2 = event.x / self.root.imscale, event.y / self.root.imscale
+
+        # Correct ordering for the top-left and bottom-right coordinates
+        left, right = min(x1, x2), max(x1, x2)
+        top, bottom = min(y1, y2), max(y1, y2)
+
+        # Draw the shape directly on the current image
+        draw = ImageDraw.Draw(self.root.file_manager.current_image)
+        if self.shape == "rectangle":
+            draw.rectangle([left, top, right, bottom], outline=self.color)
+        elif self.shape == "circle":
+            draw.ellipse([left, top, right, bottom], outline=self.color)
+        elif self.shape == "triangle":
+            top_x = (left + right) / 2
+            draw.polygon([(left, y2), (right, y2), (top_x, y1)], outline=self.color)
+        elif self.shape == "line":
+            draw.line([x1, y1, x2, y2], fill=self.color)
+
+        # Save the image
+        self.root.file_manager.save()
+
+        # Update the canvas to show the new image
         self.root.display_image_on_canvas()
+
+        # Reset selection state
+        self.selection_start = None
+        self.ids = []
