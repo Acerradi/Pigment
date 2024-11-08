@@ -2,7 +2,7 @@ import tkinter
 from tkinter import *
 from tkinter import filedialog
 
-
+from Pigment_project.clipboard import cut
 from canvas import CustomCanvas
 from filters import *
 
@@ -24,6 +24,7 @@ class MainWindow(tkinter.Tk):
         self.image_menu = Menu(self)
         self.help_menu = Menu(self)
         self.filter_menu = Menu(self)
+        self.edit_menu = Menu(self)
 
         # Create all window objects
         self.top_frame = None
@@ -98,6 +99,7 @@ class MainWindow(tkinter.Tk):
         self.menu.add_cascade(label='Undo', command=canvas.undo)
         self.menu.add_cascade(label='Help', menu=self.help_menu)
         self.menu.add_cascade(label="Filters", menu=self.filter_menu)
+        self.menu.add_cascade(label="Edit", menu=self.edit_menu)
 
 
         # Set up file_menu
@@ -122,6 +124,10 @@ class MainWindow(tkinter.Tk):
         self.filter_menu.add_command(label="Gaussian", command=lambda:self.gaussian(canvas))
         self.filter_menu.add_command(label="Sobel", command=lambda: self.sobel(canvas))
         self.filter_menu.add_command(label="Binary", command=lambda: self.binary(canvas))
+
+        self.edit_menu.add_command(label="Cut", command=lambda: cut(canvas))
+        self.edit_menu.add_command(label="Copy")
+        self.edit_menu.add_command(label="Paste",command=lambda:canvas.chose_tool(11))
 
     def new_main_window(self,program):
         program.root.destroy()
