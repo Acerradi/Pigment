@@ -253,7 +253,7 @@ class BucketTool(ColoredTool):
     def mouse_down(self, event):
         self.root.history.append(self.root.file_manager.current_image.copy())
         # Get the starting coordinates
-        x, y = event.x/self.root.imscale, event.y/self.root.imscale
+        x, y = self.get_event_coords(event)
         if type(self.color) != tuple:
             self.color = ImageColor.getrgb(self.color)
 
@@ -304,8 +304,7 @@ class ColorPickerTool(ColoredTool):
 
     def mouse_down(self, event):
         self.canvas.update_idletasks()
-        x = event.x/self.root.imscale
-        y = event.y/self.root.imscale
+        x, y = self.get_event_coords(event)
         pix = self.file_manager.current_image.getpixel((x, y))
         self.color = pix
 
@@ -378,6 +377,7 @@ class DrawShape(ColoredTool):
         # Reset selection state
         self.selection_start = None
         self.ids = []
+
 class PasteTool(Tool):
     def __init__(self, root,canvas):
         super().__init__(root, canvas)
