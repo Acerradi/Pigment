@@ -16,9 +16,10 @@ class Tool:
         self.canvas = canvas
         self.start_x = None
         self.start_y = None
-
+        self.ids=[]
 
     def mouse_down(self, event):
+        self.ids=[]
         # When pressing the mouse button on the canvas
         self.start_x = event.x
         self.start_y = event.y
@@ -59,18 +60,15 @@ class SelectionTool(Tool):
         draw.polygon(self.selection_points, fill=255)
 
         selected_Area = Image.composite(self.image, Image.new("RGBA", self.image.size), mask)
+        return selected_Area
 
-        self.display_on_overlay(selected_Area)
 
-    def display_on_overlay(self, area):
+    def display_on_overlay(self, area, pos: Tuple[int, int]):
         # Convert to PhotoImage for tkinter
         overlay_image = ImageTk.PhotoImage(area)
 
         # Display on overlay canvas at (0,0)
-        self.overlay_canvas.delete("all")
-        self.overlay_canvas.create_image(0, 0, anchor="nw", image=overlay_image)
-        self.overlay_canvas.image = overlay_image  # Keep a reference to avoid garbage collection
-        self.overlay_canvas.lift()  # Bring overlay to front
+        self.root.display_on_overlay(overlay_image, pos)
 
     def in_range(self):
         x1, y1 = self.selection_points[0]
@@ -83,7 +81,13 @@ class RectangleSelection(SelectionTool):
         super().__init__(r_canvas, canvas, overlay)
         self.selection_start = None
         self.selection_end = None
+    def crop_image(self, coords:[int,int,int,int]):
+        image = self.root.file_manager.current_image.copy()
 
+
+        # Crop the image using the bounding box
+        cropped_image = image.crop(coords)
+        return cropped_image
     def mouse_down(self, event):
         # Record the initial point of the selection
         self.selection_start = (event.x, event.y)
@@ -99,18 +103,37 @@ class RectangleSelection(SelectionTool):
                                                     event.x, event.y, outline='red')
 
     def mouse_up(self, event):
-        # Record the final point of the selection
-        self.selection_end = (event.x, event.y)
-        # Ensure both points are defined for further processing
-        if self.selection_start and self.selection_end:
-            x1, y1 = self.selection_start
-            x2, y2 = self.selection_end
-            self.selection_points.append((x1, y1))
-            self.selection_points.append((x1, y2))
-            self.selection_points.append((x2, y2))
-            self.selection_points.append((x2, y1))
-            self.canvas.delete(self.ids)
-            self.extract_selected_Area()
+        # Get the coordinates of the selection (top-left and bottom-right)
+        start_x = self.selection_start[0]
+        start_y = self.selection_start[1]
+        stop_x = event.x
+        stop_y = event.y
+
+        # Ensure we have the correct order (left, top, right, bottom)
+        coords = [min(start_x, stop_x), min(start_y, stop_y), max(start_x, stop_x), max(start_y, stop_y)]
+
+        # Delete the previous rectangle
+        self.canvas.delete(self.ids)
+
+        # Crop the image based on the selection
+        self.root.extracted_area = self.crop_image(coords)
+
+        # Convert the extracted image to RGBA for drawing
+        overlay = self.root.extracted_area
+
+        # Draw a rectangle on the overlay
+        draw = ImageDraw.Draw(overlay)
+        width, height = overlay.size
+        rect_coords = [0, 0, width - 1, height - 1]  # Adjust coordinates based on selection
+        draw.rectangle(rect_coords, outline='red')
+
+        # Set the extracted position (top-left corner of selection)
+        self.root.extracted_position = self.selection_start
+
+        # Display the overlay on the canvas
+        self.root.display_overlay_image_on_canvas(overlay, self.selection_start)
+
+
 
 
 class PolygonSelection(SelectionTool):
@@ -350,3 +373,19 @@ class DrawShape(ColoredTool):
         # Reset selection state
         self.selection_start = None
         self.ids = []
+class PasteTool(Tool):
+    def __init__(self, root,canvas):
+        super().__init__(root, canvas)
+    def mouse_down(self, event):
+        paste_pos = event.x, event.y
+        if self.root.clipboard:
+            if not self.root.cut:
+                self.root.history.append(self.root.file_manager.current_image.copy())
+            self.root.file_manager.current_image.paste(self.root.extracted_area, paste_pos)
+            self.root.display_image_on_canvas()
+        if self.root.cut:
+            self.root.cut = False
+            self.root.clipboard=False
+            self.root.extracted_area = None
+            self.root.extracted_position = None
+

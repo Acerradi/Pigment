@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import colorchooser, ttk
 from PIL import Image, ImageTk
 import cv2
+from typing import Tuple
+
 from file_manager import FileManager
 from tools import *
 import time
@@ -21,6 +23,10 @@ class AutoScrollbar(ttk.Scrollbar):
 class CustomCanvas:
     def __init__(self, root):
         self.file_manager = FileManager()
+        self.extracted_area = None
+        self.extracted_position = None
+        self.clipboard = False
+        self.cut = False
         self.root = root
         self.canvas = tk.Canvas(root, width=500, height=500, xscrollcommand=self.scroll_x, yscrollcommand=self.scroll_y)
         self.canvas.grid(row=0, column=0, sticky='nsew')
@@ -94,13 +100,13 @@ class CustomCanvas:
             self.tool = ColorPickerTool(self, self.canvas, self.file_manager)
         # Rectangle Selection tool
         if numb == 4:
-            self.tool = RectangleSelection(self, self.canvas, self.overlay_canvas)
+            self.tool = RectangleSelection(self, self.canvas, self.canvas)
         # Polygon Selection tool
         if numb == 5:
-            self.tool = PolygonSelection(self, self.canvas, self.overlay_canvas)
+            self.tool = PolygonSelection(self, self.canvas, self.canvas)
         # Lasso selection tool
         if numb == 6:
-            self.tool = LassoSelection(self, self.canvas, self.overlay_canvas)
+            self.tool = LassoSelection(self, self.canvas, self.canvas)
         # Line drawing tool
         if numb == 7:
             self.tool = DrawShape(self, self.canvas, self.drawing_color, "line")
@@ -113,6 +119,8 @@ class CustomCanvas:
         # Triangle drawing tool
         if numb == 10:
             self.tool = DrawShape(self, self.canvas, self.drawing_color, "triangle")
+        if numb == 11:
+            self.tool = PasteTool(self,self.canvas)
         self.tool.bind_events()
 
     def change_color(self):
@@ -161,6 +169,37 @@ class CustomCanvas:
                         int(visible_region[2] / self.imscale), int(visible_region[3] / self.imscale))
 
             cropped_image = self.file_manager.current_image.crop(crop_box)
+            display_image = cropped_image.resize((int(visible_region[2] - visible_region[0]),
+                                                  int(visible_region[3] - visible_region[1])),
+                                                 Image.Resampling.LANCZOS)
+
+            self.tk_image = ImageTk.PhotoImage(display_image)
+            self.canvas.create_image(visible_region[0], visible_region[1], anchor='nw', image=self.tk_image)
+    def display_overlay_image_on_canvas(self, overlay:Image, pos: Tuple[int,int]=(0,0)):
+        """ Display the current image on the canvas with scaling """
+        background = self.file_manager.current_image.copy()
+        background.paste(overlay, pos)
+        current_time = time.time()
+        if current_time - self.last_draw_time < 0.05:
+            return
+        self.last_draw_time = current_time
+        if background:
+
+            # Adjust visible portion of the image based on zoom
+            width, height = background.size
+            scaled_width = int(width * self.imscale)
+            scaled_height = int(height * self.imscale)
+            self.canvas.config(scrollregion=(0, 0, scaled_width, scaled_height))
+
+            # Crop and resize for visible area
+            visible_region = (self.canvas.canvasx(0), self.canvas.canvasy(0),
+                              self.canvas.canvasx(self.canvas.winfo_width()),
+                              self.canvas.canvasy(self.canvas.winfo_height()))
+
+            crop_box = (int(visible_region[0] / self.imscale), int(visible_region[1] / self.imscale),
+                        int(visible_region[2] / self.imscale), int(visible_region[3] / self.imscale))
+
+            cropped_image = background.crop(crop_box)
             display_image = cropped_image.resize((int(visible_region[2] - visible_region[0]),
                                                   int(visible_region[3] - visible_region[1])),
                                                  Image.Resampling.LANCZOS)
