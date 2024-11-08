@@ -13,3 +13,8 @@ def cut(canvas:CustomCanvas):
         canvas.display_image_on_canvas()
         canvas.clipboard = True
         canvas.cut = True
+def copy_clipboard(canvas:CustomCanvas):
+    overlay = canvas.extracted_area
+    start_pos = canvas.extracted_position
+    if overlay and start_pos:
+        canvas.clipboard = True
