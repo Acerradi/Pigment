@@ -2,7 +2,7 @@ import tkinter
 from tkinter import *
 from tkinter import filedialog
 
-from Pigment_project.clipboard import cut
+from Pigment_project.clipboard import cut, copy_clipboard
 from canvas import CustomCanvas
 from filters import *
 
@@ -126,7 +126,7 @@ class MainWindow(tkinter.Tk):
         self.filter_menu.add_command(label="Binary", command=lambda: self.binary(canvas))
 
         self.edit_menu.add_command(label="Cut", command=lambda: cut(canvas))
-        self.edit_menu.add_command(label="Copy")
+        self.edit_menu.add_command(label="Copy", command=lambda: copy_clipboard(canvas))
         self.edit_menu.add_command(label="Paste",command=lambda:canvas.chose_tool(11))
 
     def new_main_window(self,program):
