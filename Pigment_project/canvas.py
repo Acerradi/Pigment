@@ -1,5 +1,7 @@
 import tkinter as tk
 from tkinter import colorchooser, ttk
+from PIL import ImageTk
+from typing import Tuple
 
 from file_manager import FileManager
 from tools import *
