@@ -175,8 +175,8 @@ class PolygonSelection(SelectionTool):
                 self.canvas.delete(id)
             for point in self.points:
                 self.canvas.delete(point)
-            self.extract_selected_Area()
-
+            self.root.extracted_area = self.extract_selected_Area()
+            self.root.extracted_position = self.selection_points[0]
 
 class LassoSelection(SelectionTool):
     def __init__(self, r_canvas, canvas, overlay):
