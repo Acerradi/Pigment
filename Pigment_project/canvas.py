@@ -30,8 +30,6 @@ class CustomCanvas:
         self.root = root
         self.canvas = tk.Canvas(root, width=500, height=500, xscrollcommand=self.scroll_x, yscrollcommand=self.scroll_y)
         self.canvas.grid(row=0, column=0, sticky='nsew')
-        #self.overlay_canvas = tk.Canvas(root, width=500, height=500, bg=None, highlightthickness=0)
-        #self.overlay_canvas.pack(fill='both', expand=True)
 
         # Atributes for zoom and pan functionality
         self.imscale = 1.0
@@ -61,7 +59,6 @@ class CustomCanvas:
         # Time tracking
         self.last_draw_time = time.time()
 
-
     def scroll_y(self, *args):
         self.canvas.yview(*args)
         self.display_image_on_canvas()
@@ -83,7 +80,6 @@ class CustomCanvas:
             scale /= self.delta
         self.canvas.scale('all', x, y, scale, scale)
         self.display_image_on_canvas()
-
 
     def chose_tool(self, numb):
         # Drawing tool
@@ -175,14 +171,21 @@ class CustomCanvas:
 
             self.tk_image = ImageTk.PhotoImage(display_image)
             self.canvas.create_image(visible_region[0], visible_region[1], anchor='nw', image=self.tk_image)
+
     def display_overlay_image_on_canvas(self, overlay:Image, pos: Tuple[int,int]=(0,0)):
         """ Display the current image on the canvas with scaling """
         background = self.file_manager.current_image.copy()
-        background.paste(overlay, pos)
+
+        if overlay.mode == "RGBA":
+            background.paste(overlay, pos, mask=overlay.split()[3])
+        else:
+            background.paste(overlay, pos)
+
         current_time = time.time()
         if current_time - self.last_draw_time < 0.05:
             return
         self.last_draw_time = current_time
+
         if background:
 
             # Adjust visible portion of the image based on zoom

@@ -36,14 +36,17 @@ class Tool:
         x = self.canvas.canvasx(event.x) / self.root.imscale
         y = self.canvas.canvasy(event.y) / self.root.imscale
         return x, y
+
     def get_event_coords_2(self,event):
         x = self.canvas.canvasx(event.x)
         y = self.canvas.canvasy(event.y)
         return x, y
+
     def get_event_coords_3(self,event):
         x = event.x / self.root.imscale
         y = event.y / self.root.imscale
         return x, y
+
     def bind_events(self):
         # Binds the mouse events onto the overlay canvas layer
         self.canvas.bind("<ButtonPress-1>", self.mouse_down)
@@ -74,7 +77,6 @@ class SelectionTool(Tool):
         selected_Area = Image.composite(self.image, Image.new("RGBA", self.image.size), mask)
         return selected_Area
 
-
     def display_on_overlay(self, area, pos: Tuple[int, int]):
         # Convert to PhotoImage for tkinter
         overlay_image = ImageTk.PhotoImage(area)
@@ -93,13 +95,13 @@ class RectangleSelection(SelectionTool):
         super().__init__(r_canvas, canvas, overlay)
         self.selection_start_2 = None
         self.selection_end = None
+
     def crop_image(self, coords:[int,int,int,int]):
         image = self.root.file_manager.current_image.copy()
-
-
         # Crop the image using the bounding box
         cropped_image = image.crop(coords)
         return cropped_image
+
     def mouse_down(self, event):
         # Record the initial point of the selection
         self.selection_start_1 = self.get_event_coords(event)
@@ -107,7 +109,7 @@ class RectangleSelection(SelectionTool):
         self.selection_start_3 = event.x, event.y
 
     def mouse_move(self, event):
-        x1,y1=self.selection_start_2
+        x1,y1 = self.selection_start_2
         x2,y2 = self.get_event_coords_2(event)
         # Draw a rectangle from the initial click to the current mouse position
         if self.selection_start_2:
@@ -123,13 +125,16 @@ class RectangleSelection(SelectionTool):
         start_x, start_y = self.selection_start_1
         stop_x, stop_y = self.get_event_coords(event)
 
-
         # Ensure we have the correct order (left, top, right, bottom)
         coords = [min(start_x, stop_x), min(start_y, stop_y), max(start_x, stop_x), max(start_y, stop_y)]
+
+        self.selection_points = [(start_x, start_y),(start_x, stop_y),(stop_x, stop_y), (stop_x, start_y)]
 
         # Delete the previous rectangle
         self.canvas.delete(self.ids)
 
+        self.extract_selected_Area()
+        """
         # Crop the image based on the selection
         self.root.extracted_area = self.crop_image(coords)
 
@@ -147,8 +152,32 @@ class RectangleSelection(SelectionTool):
 
         # Display the overlay on the canvas
         self.root.display_overlay_image_on_canvas(overlay, self.root.extracted_position)
+        """
 
+    def extract_selected_Area(self):
+        mask = Image.new('L', self.image.size, 0)
+        draw = ImageDraw.Draw(mask)
+        draw.polygon(self.selection_points, fill=255)
 
+        image = self.image.copy()
+        extracted_image = Image.new("RGBA", self.image.size, (0,0,0,0))
+        extracted_image.paste(image, mask = mask)
+        # Calculate the tight bounding box of the selected area
+        bbox = mask.getbbox()  # Get the bounding box of non-zero (white) areas
+        if bbox:
+            cropped_image = extracted_image.crop(bbox)  # Crop tightly to the selected shape
+
+            # Save the extracted area and display it as an overlay
+            self.root.extracted_area = cropped_image
+            overlay = cropped_image.copy()
+
+            # Draw an outline on the overlay
+            draw_overlay = ImageDraw.Draw(overlay)
+            draw_overlay.polygon([(x - bbox[0], y - bbox[1]) for x, y in self.selection_points], outline="red")
+
+            # Determine the top-left corner for placement
+            self.root.extracted_position = (bbox[0], bbox[1])
+            self.root.display_overlay_image_on_canvas(overlay, self.root.extracted_position)
 
 
 class PolygonSelection(SelectionTool):
@@ -177,6 +206,30 @@ class PolygonSelection(SelectionTool):
                 self.canvas.delete(point)
             self.extract_selected_Area()
 
+    def extract_selected_Area(self):
+        mask = Image.new('L', self.image.size, 0)
+        draw = ImageDraw.Draw(mask)
+        draw.polygon(self.selection_points, fill=255)
+
+        image = self.image.copy()
+        extracted_image = Image.new("RGBA", self.image.size, (0,0,0,0))
+        extracted_image.paste(image, mask = mask)
+        # Calculate the tight bounding box of the selected area
+        bbox = mask.getbbox()  # Get the bounding box of non-zero (white) areas
+        if bbox:
+            cropped_image = extracted_image.crop(bbox)  # Crop tightly to the selected shape
+
+            # Save the extracted area and display it as an overlay
+            self.root.extracted_area = cropped_image
+            overlay = cropped_image.copy()
+
+            # Draw an outline on the overlay
+            draw_overlay = ImageDraw.Draw(overlay)
+            draw_overlay.polygon([(x - bbox[0], y - bbox[1]) for x, y in self.selection_points], outline="red")
+
+            # Determine the top-left corner for placement
+            self.root.extracted_position = (bbox[0], bbox[1])
+            self.root.display_overlay_image_on_canvas(overlay, self.root.extracted_position)
 
 class LassoSelection(SelectionTool):
     def __init__(self, r_canvas, canvas, overlay):
@@ -202,6 +255,35 @@ class LassoSelection(SelectionTool):
             if self.lasso_path:
                 self.canvas.delete(self.lasso_path)  # Remove the path preview
             self.extract_selected_Area()
+
+    def extract_selected_Area(self):
+        # Create a mask for the lasso
+        mask = Image.new("L", self.image.size, 0)
+        draw = ImageDraw.Draw(mask)
+        draw.polygon(self.selection_points, fill=255)
+
+        # Apply the mask to the original image
+        image = self.image.copy()
+        extracted_image = Image.new("RGBA", image.size, (0, 0, 0, 0))
+        extracted_image.paste(image, mask=mask)
+
+        # Calculate the tight bounding box of the selected area
+        bbox = mask.getbbox()  # Get the bounding box of non-zero (white) areas
+        if bbox:
+            cropped_image = extracted_image.crop(bbox)  # Crop tightly to the selected shape
+
+            # Save the extracted area and display it as an overlay
+            self.root.extracted_area = cropped_image
+            overlay = cropped_image.copy()
+
+            # Draw an outline on the overlay
+            draw_overlay = ImageDraw.Draw(overlay)
+            draw_overlay.polygon([(x - bbox[0], y - bbox[1]) for x, y in self.selection_points], outline="red")
+
+            # Determine the top-left corner for placement
+            self.root.extracted_position = (bbox[0], bbox[1])
+            self.root.display_overlay_image_on_canvas(overlay, self.root.extracted_position)
+
 
 #Finished
 class DrawTool(ColoredTool):
@@ -391,14 +473,16 @@ class DrawShape(ColoredTool):
 class PasteTool(Tool):
     def __init__(self, root,canvas):
         super().__init__(root, canvas)
+
     def mouse_down(self, event):
         paste_pos = self.get_event_coords_3(event)
         paste_pos = int(paste_pos[0]),int(paste_pos[1])
         if self.root.clipboard:
             if not self.root.cut:
                 self.root.history.append(self.root.file_manager.current_image.copy())
-            self.root.file_manager.current_image.paste(self.root.extracted_area, paste_pos)
+            self.root.file_manager.current_image.paste(self.root.extracted_area, paste_pos, self.root.extracted_area)
             self.root.display_image_on_canvas()
+
         if self.root.cut:
             self.root.cut = False
             self.root.clipboard=False
