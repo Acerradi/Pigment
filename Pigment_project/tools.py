@@ -1,13 +1,5 @@
-import io
-import tkinter
-from typing import Tuple
 
-import pyautogui
-
-import numpy as np
-from PIL import ImageDraw, ImageColor, ImageTk, Image
-
-from Pigment_project import canvas
+from PIL import ImageDraw, ImageColor, Image
 
 
 class Tool:
@@ -199,7 +191,7 @@ class DrawTool(ColoredTool):
         x, y = self.get_event_coords(event)
         if self.root.file_manager.current_image is not None:
             # Save the current image to history for undo
-            self.root.history.append(self.root.file_manager.current_image.copy())
+            self.root.add_to_history()
         self.start_x, self.start_y = x, y
         self.current_stroke = []
 
@@ -245,7 +237,7 @@ class BucketTool(ColoredTool):
         super().__init__(root, canvas, color=color)
 
     def mouse_down(self, event):
-        self.root.history.append(self.root.file_manager.current_image.copy())
+        self.root.add_to_history()
         # Get the starting coordinates
         x, y = self.get_event_coords(event)
         if type(self.color) != tuple:
@@ -316,7 +308,7 @@ class DrawShape(ColoredTool):
         self.ids = []
         self.shape = shape
     def mouse_down(self, event):
-        self.root.history.append(self.root.file_manager.current_image.copy())
+        self.root.add_to_history()
         # Record the initial point of the selection
         #self.selection_start = (event.x/self.root.imscale, event.y/self.root.imscale)
         self.selection_start = self.get_event_coords_2(event)
@@ -382,7 +374,7 @@ class PasteTool(Tool):
         paste_pos = int(paste_pos[0]),int(paste_pos[1])
         if self.root.clipboard:
             if not self.root.cut:
-                self.root.history.append(self.root.file_manager.current_image.copy())
+                self.root.add_to_history()
             self.root.file_manager.current_image.paste(self.root.extracted_area, paste_pos, self.root.extracted_area)
             self.root.display_image_on_canvas()
 
