@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import colorchooser, ttk
-from PIL import Image, ImageTk
-import cv2
+from PIL import ImageTk
 from typing import Tuple
 
 from file_manager import FileManager
@@ -210,6 +209,11 @@ class CustomCanvas:
             self.tk_image = ImageTk.PhotoImage(display_image)
             self.canvas.create_image(visible_region[0], visible_region[1], anchor='nw', image=self.tk_image)
 
+    def add_to_history(self):
+        if len(self.history) >= 30:
+            self.history.pop(0)
+        self.history.append(self.file_manager.current_image.copy())
+
     def undo(self):
         """Undo the last stroke"""
         if self.history:
@@ -218,14 +222,14 @@ class CustomCanvas:
             self.display_image_on_canvas()
 
     def crop(self, crop_area):
-        self.history.append(self.file_manager.current_image.copy())
+        self.add_to_history()
         width,heigth = self.file_manager.current_image.size
         crop_area = (crop_area[0],crop_area[1],width-crop_area[2],heigth-crop_area[3])
         self.file_manager.current_image = self.file_manager.current_image.crop(crop_area)
         self.display_image_on_canvas()
 
     def rotate(self, opt):
-        self.history.append(self.file_manager.current_image.copy())
+        self.add_to_history()
         if opt == 1:
             self.file_manager.current_image = self.file_manager.current_image.rotate(90)
         elif opt == 2:
@@ -233,7 +237,7 @@ class CustomCanvas:
         self.display_image_on_canvas()
 
     def flip(self, opt):
-        self.history.append(self.file_manager.current_image.copy())
+        self.add_to_history()
         if opt == 3:
             self.file_manager.current_image = self.file_manager.current_image.transpose(Image.FLIP_TOP_BOTTOM)
         elif opt == 4:

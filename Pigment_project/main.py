@@ -3,7 +3,6 @@ from tkinter import *
 from tkinter import filedialog
 
 from Pigment_project.clipboard import cut, copy_clipboard
-from canvas import CustomCanvas
 from filters import *
 
 def print_sentence():
