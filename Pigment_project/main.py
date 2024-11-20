@@ -111,7 +111,7 @@ class MainWindow(tkinter.Tk):
         self.file_menu.add_command(label='Exit', command=self.quit)
         #Set up image menu
         self.image_menu.add_command(label="Crop",command=lambda:self.open_crop_window(canvas))
-        self.image_menu.add_command(label="Resize")
+        self.image_menu.add_command(label="Resize", command=lambda:self.open_resize_window(canvas))
         self.image_menu.add_command(label="Rotate left",command=lambda:self.image_edit(1,canvas))
         self.image_menu.add_command(label="Rotate right",command=lambda:self.image_edit(2,canvas))
         self.image_menu.add_command(label="Flip vertically",command=lambda:self.image_edit(3,canvas))
@@ -190,6 +190,27 @@ class MainWindow(tkinter.Tk):
         entry_4.pack()
 
         confirm_button = Button(crop_window, text="Confirm", command=lambda:canvas.crop((int(entry_1_text.get()),int(entry_2_text.get()),int(entry_3_text.get()),int(entry_4_text.get()))))
+        confirm_button.pack()
+
+    def open_resize_window(self, canvas:CustomCanvas):
+        resize_window = Toplevel(self)
+        label_1_text = StringVar()
+        label_1_text.set("Height")
+        label_1 = Label(resize_window, textvariable=label_1_text)
+        label_1.pack()
+        entry_1_text = StringVar(value=f"{canvas.height}")
+        entry_1 = Entry(resize_window, textvariable=entry_1_text)
+        entry_1.pack()
+
+        label_2_text = StringVar()
+        label_2_text.set("Width")
+        label_2 = Label(resize_window, textvariable=label_2_text)
+        label_2.pack()
+        entry_2_text = StringVar(value=f"{canvas.width}")
+        entry_2 = Entry(resize_window, textvariable=entry_2_text)
+        entry_2.pack()
+
+        confirm_button = Button(resize_window, text="Confirm", command=lambda: canvas.resize(new_width = int(entry_2_text.get()), new_height = int(entry_1_text.get())))
         confirm_button.pack()
 
     def image_edit(self,opt:int,canvas:CustomCanvas):

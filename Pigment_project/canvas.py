@@ -27,7 +27,8 @@ class CustomCanvas:
         self.clipboard = False
         self.cut = False
         self.root = root
-        self.canvas = tk.Canvas(root, width=500, height=500, xscrollcommand=self.scroll_x, yscrollcommand=self.scroll_y)
+        self.height, self.width = 500, 500
+        self.canvas = tk.Canvas(root, width=self.width, height=self.height, xscrollcommand=self.scroll_x, yscrollcommand=self.scroll_y)
         self.canvas.grid(row=0, column=0, sticky='nsew')
 
         # Atributes for zoom and pan functionality
@@ -226,6 +227,22 @@ class CustomCanvas:
         width,heigth = self.file_manager.current_image.size
         crop_area = (crop_area[0],crop_area[1],width-crop_area[2],heigth-crop_area[3])
         self.file_manager.current_image = self.file_manager.current_image.crop(crop_area)
+        self.display_image_on_canvas()
+
+    def resize(self, new_width, new_height):
+        self.add_to_history()
+
+        # Get the current image and its size
+        current_image = self.file_manager.current_image
+
+        # Create a new blank image with the desired size, filled with white
+        new_image = Image.new("RGB", (new_width, new_height), "white")
+
+        # Paste the current image onto the new canvas
+        new_image.paste(current_image, (0, 0))
+
+        # Update the current image and redisplay
+        self.file_manager.current_image = new_image
         self.display_image_on_canvas()
 
     def rotate(self, opt):
