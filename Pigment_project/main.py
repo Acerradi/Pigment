@@ -52,10 +52,16 @@ class MainWindow(tkinter.Tk):
         self.canvas_frame.grid_rowconfigure(0, weight=1)
         self.canvas_frame.grid_columnconfigure(0, weight=1)
 
-
     def setup_main_frames(self, canvas):
         change_color_button = tkinter.Button(self.right_frame, text = "Select color", command=canvas.change_color)
         change_color_button.grid(row=0, column=0)
+
+        def get_value(button):
+            return int(button.get())
+        draw_size_button = tkinter.Spinbox(self.right_frame, from_=1, to=30, command=lambda:canvas.set_Drawing_size(get_value(draw_size_button)))
+        draw_size_button.grid(row=1, column=0)
+        draw_size_button.delete(0, tkinter.END)
+        draw_size_button.insert(0, "5")
 
         draw_tool_button = tkinter.Button(self.left_frame, text = "Draw", command=lambda:canvas.chose_tool(numb=0))
         draw_tool_button.grid(row=0, column=0)
@@ -218,12 +224,16 @@ class MainWindow(tkinter.Tk):
             canvas.rotate(opt)
         elif opt <= 4:
             canvas.flip(opt)
+
     def gaussian(self, canvas):
         gaussian(canvas)
+
     def sobel(self, canvas):
         sobel(canvas)
+
     def binary(self,canvas):
         apply_binary_filter(canvas)
+
     def run(self):
         # Execute tkinter
         self.mainloop()

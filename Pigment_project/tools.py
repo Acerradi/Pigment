@@ -309,10 +309,11 @@ class ColorPickerTool(ColoredTool):
 
 #Finished
 class DrawShape(ColoredTool):
-    def __init__(self, root, canvas, color, shape):
+    def __init__(self, root, canvas, color, shape, size):
         super().__init__(root, canvas, color=color)
         self.ids = []
         self.shape = shape
+        self.size = size
     def mouse_down(self, event):
         self.root.add_to_history()
         # Record the initial point of the selection
@@ -329,15 +330,15 @@ class DrawShape(ColoredTool):
             x2,y2 = self.get_event_coords_2(event)
 
             if self.shape == "rectangle":
-                self.ids = self.canvas.create_rectangle(x1, y1, x2, y2, outline=self.color)
+                self.ids = self.canvas.create_rectangle(x1, y1, x2, y2, outline=self.color, width=self.size)
             elif self.shape == "circle":
-                self.ids = self.canvas.create_oval(x1, y1, x2, y2, outline=self.color)
+                self.ids = self.canvas.create_oval(x1, y1, x2, y2, outline=self.color, width=self.size)
             elif self.shape == "triangle":
                 # Calculate the top vertex for an isosceles triangle
                 top_x = (x1 + x2) / 2
-                self.ids = self.canvas.create_polygon(x1, y2, x2, y2, top_x, y1, outline=self.color, fill="")
+                self.ids = self.canvas.create_polygon(x1, y2, x2, y2, top_x, y1, outline=self.color, fill="", width=self.size)
             elif self.shape == "line":
-                self.ids = self.canvas.create_line(x1, y1, x2, y2, fill=self.color)
+                self.ids = self.canvas.create_line(x1, y1, x2, y2, fill=self.color, width=self.size)
     def mouse_up(self, event):
         x1, y1 = self.selection_start
         x1 = x1 / self.root.imscale
@@ -351,14 +352,14 @@ class DrawShape(ColoredTool):
         # Draw the shape directly on the current image
         draw = ImageDraw.Draw(self.root.file_manager.current_image)
         if self.shape == "rectangle":
-            draw.rectangle([left, top, right, bottom], outline=self.color)
+            draw.rectangle([left, top, right, bottom], outline=self.color, width=self.size)
         elif self.shape == "circle":
-            draw.ellipse([left, top, right, bottom], outline=self.color)
+            draw.ellipse([left, top, right, bottom], outline=self.color, width=self.size)
         elif self.shape == "triangle":
             top_x = (left + right) / 2
-            draw.polygon([(left, y2), (right, y2), (top_x, y1)], outline=self.color)
+            draw.polygon([(left, y2), (right, y2), (top_x, y1)], outline=self.color, width=self.size)
         elif self.shape == "line":
-            draw.line([x1, y1, x2, y2], fill=self.color)
+            draw.line([x1, y1, x2, y2], fill=self.color, width=self.size)
 
         # Save the image
         self.root.file_manager.save()
