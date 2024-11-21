@@ -27,7 +27,8 @@ class CustomCanvas:
         self.clipboard = False
         self.cut = False
         self.root = root
-        self.canvas = tk.Canvas(root, width=500, height=500, xscrollcommand=self.scroll_x, yscrollcommand=self.scroll_y)
+        self.height, self.width = 500, 500
+        self.canvas = tk.Canvas(root, width=self.width, height=self.height, xscrollcommand=self.scroll_x, yscrollcommand=self.scroll_y)
         self.canvas.grid(row=0, column=0, sticky='nsew')
 
         # Atributes for zoom and pan functionality
@@ -47,10 +48,11 @@ class CustomCanvas:
         self.current_stroke = None
         self.drawing_color = "#000000"
         self.drawing_size = 5
+        self.current_tool = 0
 
         # Keep track of the drawing history (for undo)
         self.history = []
-        self.chose_tool(0)
+        self.chose_tool(self.current_tool)
 
         # Bind zoom
         self.canvas.bind('<MouseWheel>', self.wheel)
@@ -82,6 +84,7 @@ class CustomCanvas:
 
     def chose_tool(self, numb):
         # Drawing tool
+        self.current_tool = numb
         if numb == 0:
             self.tool = DrawTool(self, self.canvas, self.drawing_color, self.drawing_size)
         # Eraser tool
@@ -104,16 +107,16 @@ class CustomCanvas:
             self.tool = LassoSelection(self, self.canvas, self.canvas)
         # Line drawing tool
         if numb == 7:
-            self.tool = DrawShape(self, self.canvas, self.drawing_color, "line")
+            self.tool = DrawShape(self, self.canvas, self.drawing_color, "line", self.drawing_size)
         # Rectangle drawing tool
         if numb == 8:
-            self.tool = DrawShape(self, self.canvas, self.drawing_color, "rectangle")
+            self.tool = DrawShape(self, self.canvas, self.drawing_color, "rectangle", self.drawing_size)
         # Circle drawing tool
         if numb == 9:
-            self.tool = DrawShape(self, self.canvas, self.drawing_color, "circle")
+            self.tool = DrawShape(self, self.canvas, self.drawing_color, "circle", self.drawing_size)
         # Triangle drawing tool
         if numb == 10:
-            self.tool = DrawShape(self, self.canvas, self.drawing_color, "triangle")
+            self.tool = DrawShape(self, self.canvas, self.drawing_color, "triangle", self.drawing_size)
         if numb == 11:
             self.tool = PasteTool(self,self.canvas)
         self.tool.bind_events()
@@ -126,20 +129,6 @@ class CustomCanvas:
 
     def change_drawing_size(self):
         pass
-
-    """
-    def display_image_on_canvas(self):
-        canvas = self.canvas
-        if self.file_manager.current_image is not None:
-            # Convert PIL Image to ImageTk.PhotoImage for Tkinter
-            img_tk = ImageTk.PhotoImage(image=self.file_manager.current_image)
-
-            # Create image on the Tkinter canvas
-            canvas.create_image(0, 0, anchor=tk.NW, image=img_tk)
-
-            # To prevent garbage collection of image in Tkinter
-            canvas.img_tk = img_tk  # Save a reference to the image
-    """
 
     def display_image_on_canvas(self):
         """ Display the current image on the canvas with scaling """
@@ -228,6 +217,22 @@ class CustomCanvas:
         self.file_manager.current_image = self.file_manager.current_image.crop(crop_area)
         self.display_image_on_canvas()
 
+    def resize(self, new_width, new_height):
+        self.add_to_history()
+
+        # Get the current image and its size
+        current_image = self.file_manager.current_image
+
+        # Create a new blank image with the desired size, filled with white
+        new_image = Image.new("RGB", (new_width, new_height), "white")
+
+        # Paste the current image onto the new canvas
+        new_image.paste(current_image, (0, 0))
+
+        # Update the current image and redisplay
+        self.file_manager.current_image = new_image
+        self.display_image_on_canvas()
+
     def rotate(self, opt):
         self.add_to_history()
         if opt == 1:
@@ -243,3 +248,7 @@ class CustomCanvas:
         elif opt == 4:
             self.file_manager.current_image = self.file_manager.current_image.transpose(Image.FLIP_LEFT_RIGHT)
         self.display_image_on_canvas()
+
+    def set_Drawing_size(self, size):
+        self.drawing_size = size
+        self.chose_tool(self.current_tool)

@@ -130,17 +130,19 @@ class RectangleSelection(SelectionTool):
 class PolygonSelection(SelectionTool):
     def __init__(self, r_canvas, canvas, overlay):
         super().__init__(r_canvas, canvas, overlay)
+        self.polygon_points = []
         self.points = []
 
     def mouse_down(self, event):
-        x, y = event.x, event.y
+        x, y = self.get_event_coords_2(event)
         # Append each point as the user clicks
-        self.selection_points.append((x, y))
+        self.selection_points.append((self.get_event_coords(event)))
+        self.polygon_points.append((x, y))
         # Draw small circles for each vertex on the canvas
         self.points.append(self.canvas.create_oval(x - 2, y - 2, x + 2, y + 2, fill="red"))
         if len(self.selection_points) > 1:
             # Draw lines connecting points
-            self.ids.append(self.canvas.create_line(self.selection_points[-2], self.selection_points[-1], fill="red"))
+            self.ids.append(self.canvas.create_line(self.polygon_points[-2], self.polygon_points[-1], fill="red"))
 
     def mouse_move(self, event):
         pass
@@ -160,23 +162,27 @@ class LassoSelection(SelectionTool):
         self.lasso_path = []
 
     def mouse_down(self, event):
-        self.selection_points = [(event.x, event.y)]  # Start new lasso path
+        self.selection_points = [(self.get_event_coords(event))]  # Start new lasso path
+        self.lasso_path = [(self.get_event_coords_2(event))]
 
     def mouse_move(self, event):
         # Append points as the user drags
         if self.selection_points:
-            self.selection_points.append((event.x, event.y))
-            if self.lasso_path:
-                self.canvas.delete(self.lasso_path)
+            self.selection_points.append((self.get_event_coords(event)))
+            self.lasso_path.append(self.get_event_coords_2(event))
+            if self.ids:
+                self.canvas.delete(self.ids)
             # Draw the current path
-            self.lasso_path = self.canvas.create_line(self.selection_points, fill="red", smooth=True)
+            self.ids = self.canvas.create_line(self.lasso_path, fill="red", smooth=True)
 
     def mouse_up(self, event):
         # Close the lasso path by connecting last point to the first
         if len(self.selection_points) > 2:
             self.selection_points.append(self.selection_points[0])  # Close the loop
-            if self.lasso_path:
-                self.canvas.delete(self.lasso_path)  # Remove the path preview
+            self.lasso_path.append(self.lasso_path[0])  # Close the loop
+            if self.ids:
+                self.canvas.delete(self.ids)  # Remove the path preview
+
             self.extract_selected_Area()
 
 #Finished
@@ -303,10 +309,11 @@ class ColorPickerTool(ColoredTool):
 
 #Finished
 class DrawShape(ColoredTool):
-    def __init__(self, root, canvas, color, shape):
+    def __init__(self, root, canvas, color, shape, size):
         super().__init__(root, canvas, color=color)
         self.ids = []
         self.shape = shape
+        self.size = size
     def mouse_down(self, event):
         self.root.add_to_history()
         # Record the initial point of the selection
@@ -323,15 +330,15 @@ class DrawShape(ColoredTool):
             x2,y2 = self.get_event_coords_2(event)
 
             if self.shape == "rectangle":
-                self.ids = self.canvas.create_rectangle(x1, y1, x2, y2, outline=self.color)
+                self.ids = self.canvas.create_rectangle(x1, y1, x2, y2, outline=self.color, width=self.size)
             elif self.shape == "circle":
-                self.ids = self.canvas.create_oval(x1, y1, x2, y2, outline=self.color)
+                self.ids = self.canvas.create_oval(x1, y1, x2, y2, outline=self.color, width=self.size)
             elif self.shape == "triangle":
                 # Calculate the top vertex for an isosceles triangle
                 top_x = (x1 + x2) / 2
-                self.ids = self.canvas.create_polygon(x1, y2, x2, y2, top_x, y1, outline=self.color, fill="")
+                self.ids = self.canvas.create_polygon(x1, y2, x2, y2, top_x, y1, outline=self.color, fill="", width=self.size)
             elif self.shape == "line":
-                self.ids = self.canvas.create_line(x1, y1, x2, y2, fill=self.color)
+                self.ids = self.canvas.create_line(x1, y1, x2, y2, fill=self.color, width=self.size)
     def mouse_up(self, event):
         x1, y1 = self.selection_start
         x1 = x1 / self.root.imscale
@@ -345,14 +352,14 @@ class DrawShape(ColoredTool):
         # Draw the shape directly on the current image
         draw = ImageDraw.Draw(self.root.file_manager.current_image)
         if self.shape == "rectangle":
-            draw.rectangle([left, top, right, bottom], outline=self.color)
+            draw.rectangle([left, top, right, bottom], outline=self.color, width=self.size)
         elif self.shape == "circle":
-            draw.ellipse([left, top, right, bottom], outline=self.color)
+            draw.ellipse([left, top, right, bottom], outline=self.color, width=self.size)
         elif self.shape == "triangle":
             top_x = (left + right) / 2
-            draw.polygon([(left, y2), (right, y2), (top_x, y1)], outline=self.color)
+            draw.polygon([(left, y2), (right, y2), (top_x, y1)], outline=self.color, width=self.size)
         elif self.shape == "line":
-            draw.line([x1, y1, x2, y2], fill=self.color)
+            draw.line([x1, y1, x2, y2], fill=self.color, width=self.size)
 
         # Save the image
         self.root.file_manager.save()
@@ -370,7 +377,7 @@ class PasteTool(Tool):
         super().__init__(root, canvas)
 
     def mouse_down(self, event):
-        paste_pos = self.get_event_coords_3(event)
+        paste_pos = self.get_event_coords(event)
         paste_pos = int(paste_pos[0]),int(paste_pos[1])
         if self.root.clipboard:
             if not self.root.cut:

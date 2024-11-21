@@ -52,10 +52,16 @@ class MainWindow(tkinter.Tk):
         self.canvas_frame.grid_rowconfigure(0, weight=1)
         self.canvas_frame.grid_columnconfigure(0, weight=1)
 
-
     def setup_main_frames(self, canvas):
         change_color_button = tkinter.Button(self.right_frame, text = "Select color", command=canvas.change_color)
         change_color_button.grid(row=0, column=0)
+
+        def get_value(button):
+            return int(button.get())
+        draw_size_button = tkinter.Spinbox(self.right_frame, from_=1, to=30, command=lambda:canvas.set_Drawing_size(get_value(draw_size_button)))
+        draw_size_button.grid(row=1, column=0)
+        draw_size_button.delete(0, tkinter.END)
+        draw_size_button.insert(0, "5")
 
         draw_tool_button = tkinter.Button(self.left_frame, text = "Draw", command=lambda:canvas.chose_tool(numb=0))
         draw_tool_button.grid(row=0, column=0)
@@ -111,7 +117,7 @@ class MainWindow(tkinter.Tk):
         self.file_menu.add_command(label='Exit', command=self.quit)
         #Set up image menu
         self.image_menu.add_command(label="Crop",command=lambda:self.open_crop_window(canvas))
-        self.image_menu.add_command(label="Resize")
+        self.image_menu.add_command(label="Resize", command=lambda:self.open_resize_window(canvas))
         self.image_menu.add_command(label="Rotate left",command=lambda:self.image_edit(1,canvas))
         self.image_menu.add_command(label="Rotate right",command=lambda:self.image_edit(2,canvas))
         self.image_menu.add_command(label="Flip vertically",command=lambda:self.image_edit(3,canvas))
@@ -192,17 +198,42 @@ class MainWindow(tkinter.Tk):
         confirm_button = Button(crop_window, text="Confirm", command=lambda:canvas.crop((int(entry_1_text.get()),int(entry_2_text.get()),int(entry_3_text.get()),int(entry_4_text.get()))))
         confirm_button.pack()
 
+    def open_resize_window(self, canvas:CustomCanvas):
+        resize_window = Toplevel(self)
+        label_1_text = StringVar()
+        label_1_text.set("Height")
+        label_1 = Label(resize_window, textvariable=label_1_text)
+        label_1.pack()
+        entry_1_text = StringVar(value=f"{canvas.height}")
+        entry_1 = Entry(resize_window, textvariable=entry_1_text)
+        entry_1.pack()
+
+        label_2_text = StringVar()
+        label_2_text.set("Width")
+        label_2 = Label(resize_window, textvariable=label_2_text)
+        label_2.pack()
+        entry_2_text = StringVar(value=f"{canvas.width}")
+        entry_2 = Entry(resize_window, textvariable=entry_2_text)
+        entry_2.pack()
+
+        confirm_button = Button(resize_window, text="Confirm", command=lambda: canvas.resize(new_width = int(entry_2_text.get()), new_height = int(entry_1_text.get())))
+        confirm_button.pack()
+
     def image_edit(self,opt:int,canvas:CustomCanvas):
         if opt <= 2:
             canvas.rotate(opt)
         elif opt <= 4:
             canvas.flip(opt)
+
     def gaussian(self, canvas):
         gaussian(canvas)
+
     def sobel(self, canvas):
         sobel(canvas)
+
     def binary(self,canvas):
         apply_binary_filter(canvas)
+
     def run(self):
         # Execute tkinter
         self.mainloop()
