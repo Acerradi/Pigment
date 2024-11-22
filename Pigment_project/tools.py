@@ -304,7 +304,8 @@ class ColorPickerTool(ColoredTool):
         pass
 
     def mouse_up(self, event):
-        self.root.drawing_color = self.color
+        color = "#%02x%02x%02x" % self.color
+        self.root.drawing_color = color
         self.root.chose_tool(0)
 
 #Finished
