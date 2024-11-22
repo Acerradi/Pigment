@@ -20,10 +20,10 @@ class MainWindow(tkinter.Tk):
         # Create all menu objects
         self.menu = Menu(self)
         self.file_menu = Menu(self)
-        self.image_menu = Menu(self)
+        self.edit_menu = Menu(self)
         self.help_menu = Menu(self)
         self.filter_menu = Menu(self)
-        self.edit_menu = Menu(self)
+        self.clipboard_menu = Menu(self)
 
         # Create all window objects
         self.top_frame = None
@@ -100,11 +100,11 @@ class MainWindow(tkinter.Tk):
         # Set up menus
         self.config(menu=self.menu)
         self.menu.add_cascade(label='File', menu=self.file_menu)
-        self.menu.add_cascade(label='Image', menu=self.image_menu)
+        self.menu.add_cascade(label='Edit', menu=self.edit_menu)
         self.menu.add_cascade(label='Undo', command=canvas.undo)
         self.menu.add_cascade(label='Help', menu=self.help_menu)
         self.menu.add_cascade(label="Filters", menu=self.filter_menu)
-        self.menu.add_cascade(label="Edit", menu=self.edit_menu)
+        self.menu.add_cascade(label="Clipboard", menu=self.clipboard_menu)
 
 
         # Set up file_menu
@@ -116,12 +116,12 @@ class MainWindow(tkinter.Tk):
         self.file_menu.add_separator()
         self.file_menu.add_command(label='Exit', command=self.quit)
         #Set up image menu
-        self.image_menu.add_command(label="Crop",command=lambda:self.open_crop_window(canvas))
-        self.image_menu.add_command(label="Resize", command=lambda:self.open_resize_window(canvas))
-        self.image_menu.add_command(label="Rotate left",command=lambda:self.image_edit(1,canvas))
-        self.image_menu.add_command(label="Rotate right",command=lambda:self.image_edit(2,canvas))
-        self.image_menu.add_command(label="Flip vertically",command=lambda:self.image_edit(3,canvas))
-        self.image_menu.add_command(label="Flip horizontally",command=lambda:self.image_edit(4,canvas))
+        self.edit_menu.add_command(label="Crop", command=lambda:self.open_crop_window(canvas))
+        self.edit_menu.add_command(label="Resize", command=lambda:self.open_resize_window(canvas))
+        self.edit_menu.add_command(label="Rotate left", command=lambda:self.image_edit(1, canvas))
+        self.edit_menu.add_command(label="Rotate right", command=lambda:self.image_edit(2, canvas))
+        self.edit_menu.add_command(label="Flip vertically", command=lambda:self.image_edit(3, canvas))
+        self.edit_menu.add_command(label="Flip horizontally", command=lambda:self.image_edit(4, canvas))
 
         # Set up help_menu
         self.help_menu.add_command(label='Help', command=print_sentence)
@@ -130,9 +130,9 @@ class MainWindow(tkinter.Tk):
         self.filter_menu.add_command(label="Sobel", command=lambda: self.sobel(canvas))
         self.filter_menu.add_command(label="Binary", command=lambda: self.binary(canvas))
 
-        self.edit_menu.add_command(label="Cut", command=lambda: cut(canvas))
-        self.edit_menu.add_command(label="Copy", command=lambda: copy_clipboard(canvas))
-        self.edit_menu.add_command(label="Paste",command=lambda:canvas.chose_tool(11))
+        self.clipboard_menu.add_command(label="Cut", command=lambda: cut(canvas))
+        self.clipboard_menu.add_command(label="Copy", command=lambda: copy_clipboard(canvas))
+        self.clipboard_menu.add_command(label="Paste", command=lambda:canvas.chose_tool(11))
 
     def new_main_window(self,program):
         program.root.destroy()
